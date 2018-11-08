@@ -1,0 +1,80 @@
+spring:
+  redis:
+    database: 4
+    timeout: 5000
+  jackson:
+    default-property-inclusion: non_null
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+  profiles:
+    active: prod
+  freemarker:
+    allow-request-overrid: false
+    allow-session-override: false
+    cache: false
+    charset: UTF-8
+    check-template-location: true
+    content-type: text/html
+    enabled: true
+    expose-request-attributes: false
+    expose-session-attributes: false
+    expose-spring-macro-helpers: true
+    prefer-file-system-access: true
+    suffix: .ftl
+    template-loader-path: classpath:/templates/
+    settings.template_update_delay: 0
+    settings.default_encoding: UTF-8
+    settings.classic_compatible: true
+    settings.date_format: yyyy-MM-dd
+    settings.time_format: HH:mm:ss
+    settings.datetime_format: yyyy-MM-dd HH:mm:ss
+    order: 1
+  datasource:
+    druid:
+      initial-size: 5
+      max-active: 50
+      min-idle: 5
+      max-wait: 60000
+      pool-prepared-statements: true
+      max-pool-prepared-statement-per-connection-size: 20
+      time-between-eviction-runs-millis: 60000
+      min-evictable-idle-time-millis: 300000
+      validation-query: SELECT 1
+      test-while-idle: true
+      test-on-borrow: false
+      test-on-return: false
+      stat-view-servlet:
+        reset-enable: false
+      filter:
+        wall:
+          enabled: true
+          encoding:
+            enabled: true
+          stat:
+            log-slow-sql: true
+            slow-sql-millis: 1000
+            merge-sql: false
+    type: com.alibaba.druid.pool.DruidDataSource
+mybatis:
+  typeAliasesPackage: com.fx.spider.model
+  mapperLocations: classpath:mappers/**.xml
+  configuration:
+    map-underscore-to-camel-case: true
+server:
+  port: ${random}
+
+random: ${random.int[7000,9999]}
+
+logging:
+  level:
+    root: info
+  path: logs
+  file: fx-spider-${random}.log
+
+
+
+start: 0
+size: 70
+key: f0c35c13b2fffac65e411939bc2de921
+#key: 9723c01ea5a02ff20630db347da5fcd4
+count: 20

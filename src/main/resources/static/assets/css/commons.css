@@ -1,0 +1,28 @@
+body, th, td {
+    font-size: 12px !important;
+}
+
+.layui-form-radio span {
+    font-size: 12px !important;
+}
+
+.layui-form-radio i {
+    font-size: 18px !important;
+}
+
+.layui-btn .layui-icon {
+    margin-right: -1px !important;
+    color: #9d9d9d !important;
+}
+
+td, th {
+    text-align: center !important;
+}
+
+.layui-btn-mini i {
+    font-size: 12px !important;
+}
+
+.layui-btn-mini {
+    padding: 0 3px !important;
+}
