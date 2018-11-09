@@ -12,6 +12,7 @@ import com.fx.spider.util.CookieUtils;
 import com.fx.spider.util.ProxyUtil;
 import com.fx.spider.util.UserAgentUtil;
 import java.net.Proxy;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -176,6 +177,8 @@ public class OrderController {
         List<OrderAccount> needGet = new ArrayList<>();
         List<OrderAccount> orderAccountList = accountService.findPage(page);
 
+        String[] values = accountService.findConfigByKey(SystemConstant.GOODS_URL).split("-");
+        String goods = values[0];
 
         AtomicInteger atomicInteger = new AtomicInteger(0);
         for (OrderAccount orderAccount : orderAccountList) {
@@ -283,6 +286,91 @@ public class OrderController {
         result.put("data", orders);
 
         return result;
+    }
+
+    @GetMapping("/accounts")
+    public Object accounts(String name, String type) throws Exception {
+        Map<String, Object> result = new HashMap<>();
+        List<OrderAccount> orders = new ArrayList<>();
+        List<OrderAccount> orderAccountList = accountService.findAll();
+        CountDownLatch countDownLatch = new CountDownLatch(orderAccountList.size());
+
+        int i = 0;
+        for (OrderAccount orderAccount : orderAccountList) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        ProxyUtil proxyUtil = new ProxyUtil(key);
+                        Proxy wdProxy = proxyUtil.getWdProxy();
+                        Map<String, String> cookies = getCookies(orderAccount.getPhone(), orderAccount.getPassword(), 0, wdProxy);
+                        orders.add(orderAccount);
+
+                        if(cookies != null) {
+                            setDefaultAddress(orderAccount, cookies, wdProxy);
+
+                            orderAccount.setStatus2(orderAccount.getStatus());
+                            if(MapUtils.isNotEmpty(cookies)) {
+                                String vc = getVc(cookies, wdProxy);
+                                orderAccount.setVc(vc);
+                            }
+                        }
+                    } catch (Exception e) {
+                        log.error("登录失败： " + e.getMessage());
+                    } finally {
+                        countDownLatch.countDown();
+                    }
+                }
+            }).start();
+            System.err.println(++i);
+            Thread.sleep(5300);
+        }
+
+
+        countDownLatch.await();
+        System.out.println("开始");
+
+        result.put("code", 0);
+        result.put("count", orders.size());
+        result.put("data", orders);
+
+        return result;
+    }
+
+    private String getVc(Map<String, String> cookies, Proxy proxy) {
+        try {
+            Document parse = Jsoup.connect("https://mall.phicomm.com/my-vclist.html")
+                .cookies(cookies)
+                .userAgent(UserAgentUtil.get())
+                .timeout(SystemConstant.TIME_OUT)
+                .proxy(proxy).validateTLSCertificates(false)
+                .execute().parse();
+            String vc = parse.body().text().split("可用维C ")[1].split(" 冻结维C")[0];
+            return vc;
+        } catch (Exception e) {
+            return "----";
+        }
+    }
+
+    private void setDefaultAddress(OrderAccount orderAccount, Map<String, String> cookie, Proxy proxy) {
+        try {
+            Thread.sleep(3000);
+            Document document = Jsoup.connect("https://mall.phicomm.com/my-receiver.html").method(Connection.Method.GET).cookies(cookie).timeout(SystemConstant.TIME_OUT)
+                .proxy(proxy).validateTLSCertificates(false)
+                .userAgent(UserAgentUtil.get())
+                .timeout(SystemConstant.TIME_OUT)
+                .execute().parse();
+            Elements dts = document.getElementsByTag("dt");
+            for (Element dt : dts) {
+                if(dt.text().contains("默认")) {
+                    String defaultAddress = dt.getElementsByTag("span").get(0).text() + document.getElementsByTag("dd").get(0).text();
+                    orderAccount.setDefaultAddress(defaultAddress);
+                }
+            }
+        } catch (Exception e) {
+            log.error("获取默认地址失败：" + e.getMessage());
+            orderAccount.setDefaultAddress("----");
+        }
     }
 
     private void setDetail(Map<String, String> cookies, Elements aElements, OrderAccount order, Integer retryCount, Proxy proxy) {

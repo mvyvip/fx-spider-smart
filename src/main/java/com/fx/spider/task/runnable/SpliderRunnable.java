@@ -213,20 +213,20 @@ public class SpliderRunnable implements Runnable {
                                 updateRsBody(body);
                             }
                         } catch (Exception e) {
-                            if(e.getMessage().equals("HTTP error fetching URL") || e.getMessage().equals("Read timed out")
-                                || e.getMessage().equals("Connection refused: connect")
-                                || e.getMessage().equals("Connection timed out: connect")) {
+                            if(e.getMessage().contains("HTTP error fetching URL") || e.getMessage().contains("Read timed out")
+                                || e.getMessage().contains("Connection refused: connect")
+                                || e.getMessage().contains("Connection timed out: connect")) {
                                 info("ip被封禁或过期，换ip中----" + e.getMessage());
                                 proxyUtil.initIps();
                                 flag = false;
                                 start();
                             }
-                            log.error("初始化>>>body失败--" + e.getMessage());
+                            info("初始化>>>body失败--" + e.getMessage());
                         }
 //                    }
 //                }).start();
             } catch (Exception e) {
-                log.error("初始化body失败--" + e.getMessage());
+                info("初始化body失败--" + e.getMessage());
             }
         }
         return rsbody;
@@ -300,7 +300,7 @@ public class SpliderRunnable implements Runnable {
             return true;
         } catch (Exception e) {
             info("--初始化地址失败" + e.getMessage());
-            if(e.getMessage().equals("HTTP error fetching URL") || e.getMessage().equals("Read timed out") || e.getMessage().equals("Connection refused: connect")) {
+            if(e.getMessage().contains("HTTP error fetching URL") || e.getMessage().contains("Read timed out") || e.getMessage().contains("Connection refused: connect")) {
                 info("ip被封禁或过期，换ip中----" + e.getMessage());
                 proxyUtil.initIps();
                 start();
@@ -403,10 +403,10 @@ public class SpliderRunnable implements Runnable {
             }
             toLoginPage();
         } catch (Exception e) {
-            log.error("获取 __jsl_clearance 失败，{}", e.getMessage());
-            if(e.getMessage().equals("HTTP error fetching URL") || e.getMessage().equals("Read timed out")
-                    || e.getMessage().equals("Connection refused: connect")
-                    || e.getMessage().equals("Connection timed out: connect")) {
+            info("获取 __jsl_clearance 失败，" + e.getMessage());
+            if(e.getMessage().contains("HTTP error fetching URL") || e.getMessage().contains("Read timed out")
+                    || e.getMessage().contains("Connection refused: connect")
+                    || e.getMessage().contains("Connection timed out: connect")) {
                 info("ip被封禁或过期，换ip中----" + e.getMessage());
                 proxyUtil.initIps();
             }

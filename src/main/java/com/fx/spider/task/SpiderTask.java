@@ -55,7 +55,7 @@ public class SpiderTask {
         }
         log.info("参与总数：{}, 开始下标：{}, 结束下标：{}", accounts.size(), start, start + size);
 
-        new Thread(new Runnable() {
+        /*new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -79,7 +79,7 @@ public class SpiderTask {
                     e.printStackTrace();
                 }
             }
-        }).start();
+        }).start();*/
     }
 
 }
