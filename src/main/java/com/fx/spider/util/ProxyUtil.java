@@ -38,7 +38,6 @@ public class ProxyUtil {
             Connection.Response execute = Jsoup.connect("http://webapi.http.zhimacangku.com/getip?num=" + 50 + "&type=2&pro=&city=0&yys=0&port=11&time=2&ts=1&ys=0&cs=0&lb=1&sb=0&pb=45&mr=2&regions=")
                     .timeout(5000)
                     .execute();
-
             JSONArray datas = JSON.parseObject(execute.body()).getJSONArray("data");
 
             List<ProxyEntity> proxyEntities = new ArrayList<>();

@@ -90,7 +90,7 @@ public class SpliderRunnable implements Runnable {
     @Override
     public void run() {
         try {
-            Thread.sleep(3 * 1000);
+            Thread.sleep(4 * 1000);
         } catch (Exception e) {
         }
         start();
