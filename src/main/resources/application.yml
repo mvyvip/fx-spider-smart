@@ -74,7 +74,7 @@ logging:
 
 
 start: 0
-size: 70
+size: 100
 key: f0c35c13b2fffac65e411939bc2de921
 #key: 9723c01ea5a02ff20630db347da5fcd4
 count: 20

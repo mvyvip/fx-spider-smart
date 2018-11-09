@@ -46,23 +46,21 @@ public class SpiderTask {
         log.info("===========================================================================");
 
         List<OrderAccount> accounts = accountService.findByStatus();
-        if((start + size) > accounts.size()) {
+        if ((start + size) > accounts.size()) {
             start = accounts.size() - size;
         }
-        if(start >= accounts.size()) {
+        if (start >= accounts.size()) {
             log.info("开始下标：[{}],  总共数据：[{}],未启动成功", start, accounts.size());
             return;
         }
         log.info("参与总数：{}, 开始下标：{}, 结束下标：{}", accounts.size(), start, start + size);
 
-
         new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    //        for (int i = start; i < start + size; i++) {
-                    for (int i = start; i < 3; i++) {
-//            for (int j = 0; j < 5; j++) {
+                    for (int i = start; i < start + size; i++) {
+//                    for (int i = start; i < 3; i++) {
                         int finalI = i;
                         new Thread(new Runnable() {
                             @Override
@@ -75,19 +73,13 @@ public class SpiderTask {
                                 }
                             }
                         }).start();
-//            }
-                        Thread.sleep(5500);
+                        Thread.sleep(2500);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
         }).start();
-
-//        System.out.println(accountService.findAll());
-        System.err.println("size>>>" + accountService.findAll().size());
-//        System.out.println(accountService.findByStatus());
-        System.err.println(accountService.findByStatus().size());
     }
 
 }
