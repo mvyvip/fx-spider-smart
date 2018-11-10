@@ -81,6 +81,22 @@ public class ProxyUtil {
         return proxy;
     }
 
+    public synchronized List<ProxyEntity> get50WdProxy() throws Exception {
+        List<ProxyEntity> proxyEntities = new ArrayList<>();
+        Connection.Response response = Jsoup.connect("http://h.wandouip.com/get/ip-list?pack=0&num=" + 100 + "&xy=2&type=2&lb=\\r\\n&mr=2&app_key=" + key)
+                .timeout(SystemConstant.TIME_OUT)
+                .ignoreContentType(true)
+                .header("Content-Type", "application/json; charset=UTF-8")
+                .execute();
+        JSONArray datas = JSONObject.parseObject(response.body()).getJSONArray("data");
+        for (Object data : datas) {
+            JSONObject jsonObject = JSONObject.parseObject(data.toString());
+            proxyEntities.add(new ProxyEntity(jsonObject.getString("ip"), jsonObject.getInteger("port"), jsonObject.getDate("expire_time")));
+        }
+        return proxyEntities;
+    }
+
+
     public static void main(String[] args) throws Exception {
 /*
         Proxy proxy = new ProxyUtil("f0c35c13b2fffac65e411939bc2de921").getProxy();

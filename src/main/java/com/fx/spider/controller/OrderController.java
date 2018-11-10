@@ -6,11 +6,14 @@ import com.alibaba.fastjson.JSONObject;
 import com.fx.spider.constant.SystemConstant;
 import com.fx.spider.model.OrderAccount;
 import com.fx.spider.model.Page;
+import com.fx.spider.model.ProxyEntity;
 import com.fx.spider.model.ViewData;
 import com.fx.spider.service.AccountService;
 import com.fx.spider.util.CookieUtils;
 import com.fx.spider.util.ProxyUtil;
 import com.fx.spider.util.UserAgentUtil;
+
+import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -189,11 +192,14 @@ public class OrderController {
                         ProxyUtil proxyUtil = new ProxyUtil(key);
                         Proxy wdProxy = proxyUtil.getWdProxy();
                         Map<String, String> cookies = getCookies(orderAccount.getPhone(), orderAccount.getPassword(), 0, wdProxy);
+                        if(MapUtils.isEmpty(cookies)) {
+                            System.out.println(orderAccount.getPhone() + "----" + orderAccount.getPassword() + "---登录失败了------######");
+                        }
                         if(MapUtils.isNotEmpty(cookies)) {
                             // String vc = getVc(cookies);
                             Thread.sleep(5000);
                             String vc = "0";
-                            String body = getOrders(cookies, wdProxy);
+                            String body = getOrders(cookies, wdProxy, 1);
                             orderAccount.setVc(vc);
                             if(body.contains("暂无")) {
                                 needGet.add(orderAccount);
@@ -394,7 +400,7 @@ public class OrderController {
                 }
             }
         } catch (Exception e){
-            System.out.println("设置详情失败--" + cookies.get("_SID") + "---" + e.getMessage());
+            System.out.println("设置详情失败--" + cookies.get("_SID") + "---" + e.getMessage() + "####");
 //            setDetail(cookies, aElements, order, retryCount, proxy);
         }
     }
@@ -534,8 +540,9 @@ public class OrderController {
         return cookies;
     }
 
-    private String getOrders(Map<String, String> cookies, Proxy proxy) {
+    private String getOrders(Map<String, String> cookies, Proxy proxy, int i) {
         try {
+            Thread.sleep(3000);
             Connection.Response response = Jsoup.connect("https://mall.phicomm.com/index.php/my-orders.html")
                     .method(Connection.Method.POST)
                     .ignoreContentType(true)
@@ -546,8 +553,12 @@ public class OrderController {
                     .execute();
             return response.body();
         } catch (Exception e) {
-            System.out.println("获取订单失败--" + cookies.get("_SID") + "---" + e.getMessage());
-            return "暂无";
+            i++;
+            if(i > 10) {
+                System.out.println("获取订单失败-######-" + cookies.get("_SID") + "---" + e.getMessage());
+                return "暂无";
+            }
+            return getOrders(cookies, proxy, i);
         }
     }
 

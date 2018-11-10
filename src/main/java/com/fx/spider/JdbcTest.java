@@ -44,16 +44,16 @@ public class JdbcTest { //定义一个类
             String url = "jdbc:mysql://118.24.153.209:3306/fx"; //防止乱码；useUnicode=true表示使用Unicode字符集；characterEncoding=UTF8表示使用UTF-8来编辑的。
             String user = "root";                                   //3.定义用户名，写你想要连接到的用户。
             String pass = "admin";                                  //4.用户密码。
-            String querySql = "select phone, password from fx_order_account limit 0, 10";          //5.你想要查找的表名。
+            String querySql = "select phone, password from fx_order_account where id > 14 and id < 130";          //5.你想要查找的表名。
             Class.forName(driver);                              //6.注册驱动程序，用java.lang包下面的class类里面的Class.froName();方法 此处的driver就是1里面定义的driver，也可以  Class.forName("com.mysql.jdbc.Driver");
             Connection conn = DriverManager.getConnection(url, user, pass);//7.获取数据库连接,使用java.sql里面的DriverManager的getConnectin(String url , String username ,String password )来完成
             Statement stmt = conn.createStatement();   //8.构造一个statement对象来执行sql语句：主要有Statement，PreparedStatement，CallableStatement三种实例来实现
             ResultSet rs = stmt.executeQuery(querySql);//9.执行sql并返还结束 ；ResultSet executeQuery(String sqlString)：用于返还一个结果集（ResultSet）对象。
             while (rs.next()) {
-//                 accounts.add(new Account(rs.getString("phone"), rs.getString("password")));
+                 accounts.add(new Account(rs.getString("phone"), rs.getString("password")));
             }
 
-            String s = "" +
+           /* String s = "" +
                     "13078572696----tian8426\n" +
                     "13124612824----tian8426\n" +
                     "13037819440----tian8426\n" +
@@ -74,14 +74,14 @@ public class JdbcTest { //定义一个类
             String remark = "洋洋-VIP";
             for (String s1 : s.split("\n")) {
                 accounts.add(new Account(s1.split("----")[0], s1.split("----")[1]));
-            }
+            }*/
 
             for (Account account : accounts) {
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
                         try {
-
+/*
                             String sql = "INSERT INTO fx_order_account(phone,password,remark) VALUES(?,?,?)";
                             // 获取PrepareStatement对象
                             PreparedStatement preparedStatement = conn.prepareStatement(sql);
@@ -92,9 +92,9 @@ public class JdbcTest { //定义一个类
                             // 执行sql
                             int num = preparedStatement.executeUpdate();// 返回影响到的行数
 
-                            System.out.println("一共影响到" + num + "行");
+                            System.out.println("一共影响到" + num + "行");*/
 
-                            /*JdbcTest jdbcTest = new JdbcTest(account.getPhone(), account.getPassword());
+                            JdbcTest jdbcTest = new JdbcTest(account.getPhone(), account.getPassword());
                             jdbcTest.initCookies();
                             Map<String, String> cookies = jdbcTest.cookies;
                                     Response execute = Jsoup.connect("https://mall.phicomm.com/my-receiver-save.html").method(org.jsoup.Connection.Method.POST).cookies(cookies)
@@ -107,10 +107,10 @@ public class JdbcTest { //定义一个类
                                .data("maddr[name]", "马洪文")
                                .data("maddr[mobile]", "18254459299")
                                .data("maddr[area]", "mainland:山东省/枣庄市/山亭区:1542")
-                               .data("maddr[addr]", "山东枣庄山亭区梅花园小区   马洪文    18254459299-诗人")
+                               .data("maddr[addr]", "山东枣庄山亭区紫禁庄园 马洪文 18254459299-诗人")
                                .data("maddr[is_default]", "true")
                                .execute();
-                           System.out.println(account.getPhone() + "---ok");*/
+                           System.out.println(account.getPhone() + "----" + account.getPassword() + "---ok");
 
 
                         } catch (Exception e) {
@@ -118,7 +118,7 @@ public class JdbcTest { //定义一个类
                         }
                     }
                 }).start();
-                Thread.sleep(1000);
+                Thread.sleep(13 * 1000);
             }
 
 
