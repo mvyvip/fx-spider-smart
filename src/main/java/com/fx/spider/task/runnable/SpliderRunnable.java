@@ -83,7 +83,7 @@ public class SpliderRunnable implements Runnable {
 
     public static void main(String[] args) {
         OrderAccount orderAccount = new OrderAccount("13648045607", "li5201314");
-        SpliderRunnable spliderRunnable = new SpliderRunnable(orderAccount, "W1", "https://mall.phicomm.com/cart-fastbuy-14-1.html", "23900", "f0c35c13b2fffac65e411939bc2de921");
+        SpliderRunnable spliderRunnable = new SpliderRunnable(orderAccount, "W3", "https://mall.phicomm.com/cart-fastbuy-197-1.html", "0", "f0c35c13b2fffac65e411939bc2de921");
         spliderRunnable.run();
     }
 
@@ -430,6 +430,7 @@ public class SpliderRunnable implements Runnable {
         String resJs = (String) invocable.invokeFunction("getClearance");
         String overJs = "function getClearance2(){ var a" + resJs.split("document.cookie")[1].split("Path=/;'")[0] + "Path=/;';return a;};";
         overJs = overJs.replace("window.headless", "'undefined'");
+        overJs = overJs.replace("return return", "return eval");
         engine.eval(overJs);
         Invocable invocable2 = (Invocable) engine;
         String over = (String) invocable2.invokeFunction("getClearance2");

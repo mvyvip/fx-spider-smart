@@ -467,6 +467,7 @@ public class OrderController {
         String resJs = (String) invocable.invokeFunction("getClearance");
         String overJs = "function getClearance2(){ var a" + resJs.split("document.cookie")[1].split("Path=/;'")[0] + "Path=/;';return a;};";
         overJs = overJs.replace("window.headless", "'undefined'");
+        overJs = overJs.replace("return return", "return eval");
         engine.eval(overJs);
         Invocable invocable2 = (Invocable) engine;
         String over = (String) invocable2.invokeFunction("getClearance2");
