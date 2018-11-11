@@ -83,8 +83,43 @@ public class SpliderRunnable implements Runnable {
 
     public static void main(String[] args) {
         OrderAccount orderAccount = new OrderAccount("13648045607", "li5201314");
-        SpliderRunnable spliderRunnable = new SpliderRunnable(orderAccount, "W3", "https://mall.phicomm.com/cart-fastbuy-197-1.html", "0", "f0c35c13b2fffac65e411939bc2de921");
+//        SpliderRunnable spliderRunnable = new SpliderRunnable(orderAccount, "W3", "https://mall.phicomm.com/cart-fastbuy-197-1.html", "0", "f0c35c13b2fffac65e411939bc2de921");
+        SpliderRunnable spliderRunnable = new SpliderRunnable(orderAccount, "W1", "https://mall.phicomm.com/cart-fastbuy-14-1.html", "29900", "f0c35c13b2fffac65e411939bc2de921");
         spliderRunnable.run();
+//        String s = "var _1c = function() {\n" +
+//                "\t\t\n" +
+//                "\t\t\tvar cookie = '__jsl_clearance=1541911057.905|0|' + (function() {\n" +
+//                "\t\t\t\tvar _59 = [function(_1c) {\n" +
+//                "\t\t\t\t\treturn eval('String.fromCharCode(' + _1c + ')')\n" +
+//                "\t\t\t\t},\n" +
+//                "\t\t\t\t(function() {\n" +
+//                "\t\t\t\t\tvar _1c = document.createElement('div');\n" +
+//                "\t\t\t\t\t_1c.innerHTML = '<a href=\\'/\\'>_16</a>';\n" +
+//                "\t\t\t\t\t_1c = _1c.firstChild.href;\n" +
+//                "\t\t\t\t\tvar _59 = _1c.match(/https?:\\/\\//)[0];\n" +
+//                "\t\t\t\t\t_1c = _1c.substr(_59.length).toLowerCase();\n" +
+//                "\t\t\t\t\treturn function(_59) {\n" +
+//                "\t\t\t\t\t\tfor (var _16 = 0; _16 < _59.length; _16++) {\n" +
+//                "\t\t\t\t\t\t\t_59[_16] = _1c.charAt(_59[_16])\n" +
+//                "\t\t\t\t\t\t};\n" +
+//                "\t\t\t\t\t\treturn _59.join('')\n" +
+//                "\t\t\t\t\t}\n" +
+//                "\t\t\t\t})()],\n" +
+//                "\t\t\t\t_16 = [[(7 + [] + [[]][0])], [[6] + (5 + []), (7 + [] + [[]][0]) + [6], ( - ~~~ {} + [[]][0]) + [2] + (( + []) + [] + [[]][0]), ((2 ^ -~~~ {}) + [] + []) + (7 + [] + [[]][0]), (5 + []) + (( + []) + [] + [[]][0]), [6] + [6], (7 + [] + [[]][0]) + ( - ~ ! {} + ( - ~ ! {} + [( - ~~~ {} << -~~~ {})] >> ( - ~~~ {} << -~~~ {})) + ( - ~ ! {} << ( - ~~~ {} << -~~~ {})) + [])], [(5 + [])], [( - ~~~ {} + [[]][0]) + ( - ~~~ {} + [[]][0]) + ( - ~ ! {} + ( - ~ ! {} + [( - ~~~ {} << -~~~ {})] >> ( - ~~~ {} << -~~~ {})) + ( - ~ ! {} << ( - ~~~ {} << -~~~ {})) + []), ( - ~~~ {} + [[]][0]) + ( - ~~~ {} + [[]][0]) + (( + []) + [] + [[]][0])], [[3 + ( - ~ - ~ [] ^ -~~~ {}) + ( - ~ - ~ [] ^ -~~~ {})]], [( - ~ ! {} + ( - ~ ! {} + [( - ~~~ {} << -~~~ {})] >> ( - ~~~ {} << -~~~ {})) + ( - ~ ! {} << ( - ~~~ {} << -~~~ {})) + []) + ( - ~~~ {} + [[]][0]), [3 + ( - ~ - ~ [] ^ -~~~ {}) + ( - ~ - ~ [] ^ -~~~ {})] + ( - ~ ! {} + ( - ~ ! {} + [( - ~~~ {} << -~~~ {})] >> ( - ~~~ {} << -~~~ {})) + ( - ~ ! {} << ( - ~~~ {} << -~~~ {})) + [])], [(7 + [] + [[]][0])], [( - ~~~ {} + [[]][0]) + (( + []) + [] + [[]][0]) + ((2 ^ -~~~ {}) + [] + []), [3 + ( - ~ - ~ [] ^ -~~~ {}) + ( - ~ - ~ [] ^ -~~~ {})] + (( + []) + [] + [[]][0]), (5 + []) + ( - ~~~ {} + [[]][0]), ( - ~ ! {} + ( - ~ ! {} + [( - ~~~ {} << -~~~ {})] >> ( - ~~~ {} << -~~~ {})) + ( - ~ ! {} << ( - ~~~ {} << -~~~ {})) + []) + (5 + []), ( - ~ ! {} + ( - ~ ! {} + [( - ~~~ {} << -~~~ {})] >> ( - ~~~ {} << -~~~ {})) + ( - ~ ! {} << ( - ~~~ {} << -~~~ {})) + []) + (4 + [] + [[]][0]), ( - ~ ! {} + ( - ~ ! {} + [( - ~~~ {} << -~~~ {})] >> ( - ~~~ {} << -~~~ {})) + ( - ~ ! {} << ( - ~~~ {} << -~~~ {})) + []) + (4 + [] + [[]][0])], [[3 + ( - ~ - ~ [] ^ -~~~ {}) + ( - ~ - ~ [] ^ -~~~ {})]], [[6] + ( - ~ ! {} + ( - ~ ! {} + [( - ~~~ {} << -~~~ {})] >> ( - ~~~ {} << -~~~ {})) + ( - ~ ! {} << ( - ~~~ {} << -~~~ {})) + []), ( - ~ ! {} + ( - ~ ! {} + [( - ~~~ {} << -~~~ {})] >> ( - ~~~ {} << -~~~ {})) + ( - ~ ! {} << ( - ~~~ {} << -~~~ {})) + []) + [2], [3 + ( - ~ - ~ [] ^ -~~~ {}) + ( - ~ - ~ [] ^ -~~~ {})] + (( + []) + [] + [[]][0]), ( - ~~~ {} + [[]][0]) + ( - ~~~ {} + [[]][0]) + [6], [6] + ( - ~ ! {} + ( - ~ ! {} + [( - ~~~ {} << -~~~ {})] >> ( - ~~~ {} << -~~~ {})) + ( - ~ ! {} << ( - ~~~ {} << -~~~ {})) + []), (7 + [] + [[]][0]) + ((2 ^ -~~~ {}) + [] + []), (7 + [] + [[]][0]) + ((2 ^ -~~~ {}) + [] + []), ((2 ^ -~~~ {}) + [] + []) + (7 + [] + [[]][0]), (5 + []) + ( - ~~~ {} + [[]][0]), [6] + ( - ~ ! {} + ( - ~ ! {} + [( - ~~~ {} << -~~~ {})] >> ( - ~~~ {} << -~~~ {})) + ( - ~ ! {} << ( - ~~~ {} << -~~~ {})) + [])]];\n" +
+//                "\t\t\t\tfor (var _1c = 0; _1c < _16.length; _1c++) {\n" +
+//                "\t\t\t\t\t_16[_1c] = _59.reverse()[(( + []) + [] + [[]][0])](_16[_1c])\n" +
+//                "\t\t\t\t};\n" +
+//                "\t\t\t\treturn _16.join('')\n" +
+//                "\t\t\t})() + ';Expires=Sun, 11-Nov-18 05:37:37 GMT;Path=/;'\n" +
+//                "\t\t\treturn cookie;\n" +
+//                "\t\t};";
+//        String s2 = new String(s);
+//        String[] var_s = s.split(" = document.createElement")[0].split("var ");
+//        System.err.println(var_s[var_s.length - 1]);
+//        System.err.println("var " + var_s[var_s.length - 1] + " = \"https://mall.phicomm.com/\";");
+//        String s1 = replaceAll(s, "(function() {", "firstChild.href;", "########", true, true);
+//        System.out.println(s1.split("########\n")[1].split(" = ")[0]);
+//        System.out.println(replaceAll(s,"document.createElement('div')", "firstChild.href", "\"https://mall.phicomm.com/\"", true, true));
     }
 
     @Override
@@ -207,13 +242,14 @@ public class SpliderRunnable implements Runnable {
                             String body = response.body();
                             if (body.contains("库存不足,当前最多可售数量")) {
                                 info("库存不足 - " + new Date().toLocaleString());
-                                Thread.sleep(6000);
+                                Thread.sleep(5500);
                             } else if (body.contains("返回商品详情") || body.contains("cart_md5")) {
                                 flag = false;
                                 updateRsBody(body);
                             }
                         } catch (Exception e) {
                             if(e.getMessage().contains("HTTP error fetching URL") || e.getMessage().contains("Read timed out")
+                                || e.getMessage().contains("Connection reset")
                                 || e.getMessage().contains("Connection refused: connect")
                                 || e.getMessage().contains("Connection timed out: connect")) {
                                 info("ip被封禁或过期，换ip中----" + e.getMessage());
@@ -272,6 +308,7 @@ public class SpliderRunnable implements Runnable {
      */
     private boolean initData() {
         try {
+            Thread.sleep(7 * 1000);
             vcCodeUrl = "https://mall.phicomm.com/vcode-index-passport" + cookies.get("MEMBER_IDENT") + ".html";
             Document document = Jsoup.connect("https://mall.phicomm.com/my-receiver.html").method(Connection.Method.GET).cookies(cookies)
                     .timeout(SystemConstant.TIME_OUT).userAgent(UserAgentUtil.get())
@@ -325,6 +362,7 @@ public class SpliderRunnable implements Runnable {
 
     private String getVc(Map<String, String> cookies) {
         try {
+            Thread.sleep(7 * 1000);
             Document parse = Jsoup.connect("https://mall.phicomm.com/my-vclist.html")
                     .cookies(cookies)
                     .userAgent(UserAgentUtil.get())
@@ -346,6 +384,7 @@ public class SpliderRunnable implements Runnable {
      */
     private boolean isNotOrdered() {
         try {
+            Thread.sleep(7 * 1000);
             Connection.Response response = Jsoup.connect("https://mall.phicomm.com/index.php/my-orders.html")
                     .method(Connection.Method.POST)
                     .ignoreContentType(true)
@@ -405,13 +444,66 @@ public class SpliderRunnable implements Runnable {
         } catch (Exception e) {
             info("获取 __jsl_clearance 失败，" + e.getMessage());
             if(e.getMessage().contains("HTTP error fetching URL") || e.getMessage().contains("Read timed out")
-                    || e.getMessage().contains("Connection refused: connect")
+                    || e.getMessage().contains("Connection refused: connect") || e.getMessage().contains("Connection reset")
                     || e.getMessage().contains("Connection timed out: connect")) {
                 info("ip被封禁或过期，换ip中----" + e.getMessage());
                 proxyUtil.initIps();
             }
             initCookies();
         }
+    }
+
+    private static String replaceAll(String htmlString,
+                                     String start,
+                                     String end,
+                                     String newString,
+                                     boolean logError,
+                                     boolean reportError)
+    {
+        StringBuffer modString = new StringBuffer(htmlString.length());
+        int i = 0, j = 0, j2=0;
+        int tagFound = 0;
+        while(true) {
+            // first check if there are any matching start & end
+            i = htmlString.indexOf(start, j2);
+            if( i != -1 ) {
+                j = htmlString.indexOf(end, i);
+            } else {
+                j = htmlString.indexOf(end, j2);
+            }
+            if ((i != -1) && (j != -1)) {
+                tagFound++;
+                modString.append( htmlString.substring(j2, i)).append( newString );
+                j2 = j + end.length();// 此处不可以改为
+// j2 = modString.length();因为进行查找相同的操作时是在htmlString上// 操作的，htmlString是没有变过的。进行拼接操作的是modString.
+            }
+            else {
+                modString.append( htmlString.substring(j2));
+                if((i != -1) && (j == -1) || (i == -1) && (j != -1)) {
+                    //hack, to report same error message as if no tags found at all.
+                    //if later determined to report a different error message if we do
+                    //find tags but the last tag is not matched, we just need
+                    //to put the logic here.
+                    tagFound = 0;
+                }
+                break;
+            }
+        }
+        if( tagFound == 0 ) {
+            if (logError) {
+                // write the stack trace to the log file
+                String msg = "No matching tag for " + start + " or " + end;
+                log.error(msg);
+            }
+
+            if (reportError) {
+                return "no matching tag found in replaceAll=" + start;
+            }
+            else {
+                return htmlString;
+            }
+        }
+        return modString.toString();
     }
 
     public static String getck(String s) throws Exception {
@@ -431,10 +523,29 @@ public class SpliderRunnable implements Runnable {
         String overJs = "function getClearance2(){ var a" + resJs.split("document.cookie")[1].split("Path=/;'")[0] + "Path=/;';return a;};";
         overJs = overJs.replace("window.headless", "'undefined'");
         overJs = overJs.replace("return return", "return eval");
+
+        overJs = replaceByPrefix(overJs,"createElement", "firstChild.href", "\"https://mall.phicomm.com/\"");
+
         engine.eval(overJs);
         Invocable invocable2 = (Invocable) engine;
         String over = (String) invocable2.invokeFunction("getClearance2");
         return over;
+    }
+
+    public static String replaceByPrefix(String str, String start, String end, String replace) {
+        if(!str.contains(start)) {
+            System.out.println("start : " + start + " is not exist");
+            return str;
+        }
+        if(!str.contains(end)) {
+            System.out.println("end : " + end + " is not exist");
+            return str;
+        }
+        StringBuilder sb = new StringBuilder();
+        String s1 = sb.append(str.split(start)[0].substring(0, str.split(start)[0].length() - 9))
+                .append(replace)
+                .append(str.split(start)[1].split(end)[1]).toString();
+        return s1;
     }
 
     public void toLoginPage() {
@@ -453,7 +564,12 @@ public class SpliderRunnable implements Runnable {
                     .execute();
             if(execute.statusCode() != 200) {
                 log.error("登录界面ck返回异常， code: [{}]", execute.statusCode());
-                toLoginPage();
+                if(execute.statusCode() == 521) {
+                    info("重新登录中");
+                    start();
+                } else {
+                    toLoginPage();
+                }
             } else {
                 cookies.putAll(execute.cookies());
                 doLogin(0);
