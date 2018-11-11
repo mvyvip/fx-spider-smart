@@ -44,16 +44,16 @@ public class JdbcTest { //定义一个类
             String url = "jdbc:mysql://118.24.153.209:3306/fx"; //防止乱码；useUnicode=true表示使用Unicode字符集；characterEncoding=UTF8表示使用UTF-8来编辑的。
             String user = "root";                                   //3.定义用户名，写你想要连接到的用户。
             String pass = "admin";                                  //4.用户密码。
-            String querySql = "select phone, password from fx_order_account where id > 777 and id < 22560";          //5.你想要查找的表名。
+            String querySql = "select phone, password from fx_order_account where id > 4 and id < 100";          //5.你想要查找的表名。
             Class.forName(driver);                              //6.注册驱动程序，用java.lang包下面的class类里面的Class.froName();方法 此处的driver就是1里面定义的driver，也可以  Class.forName("com.mysql.jdbc.Driver");
             Connection conn = DriverManager.getConnection(url, user, pass);//7.获取数据库连接,使用java.sql里面的DriverManager的getConnectin(String url , String username ,String password )来完成
             Statement stmt = conn.createStatement();   //8.构造一个statement对象来执行sql语句：主要有Statement，PreparedStatement，CallableStatement三种实例来实现
             ResultSet rs = stmt.executeQuery(querySql);//9.执行sql并返还结束 ；ResultSet executeQuery(String sqlString)：用于返还一个结果集（ResultSet）对象。
             while (rs.next()) {
-//                 accounts.add(new Account(rs.getString("phone"), rs.getString("password")));
+                 accounts.add(new Account(rs.getString("phone"), rs.getString("password")));
             }
 
-            String s = "" +
+           /* String s = "" +
                     "13027819805----hh778899\n" +
                     "15519130649----hh778899\n" +
                     "15599134703----hh778899\n" +
@@ -139,14 +139,14 @@ public class JdbcTest { //定义一个类
             String remark = "1253447449-VIP";
             for (String s1 : s.split("\n")) {
                 accounts.add(new Account(s1.split("----")[0], s1.split("----")[1]));
-            }
+            }*/
 
             for (Account account : accounts) {
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
                         try {
-                            String sql = "INSERT INTO fx_order_account(phone,password,remark) VALUES(?,?,?)";
+                          /*  String sql = "INSERT INTO fx_order_account(phone,password,remark) VALUES(?,?,?)";
                             // 获取PrepareStatement对象
                             PreparedStatement preparedStatement = conn.prepareStatement(sql);
                             // 填充占位符
@@ -156,8 +156,7 @@ public class JdbcTest { //定义一个类
                             // 执行sql
                             int num = preparedStatement.executeUpdate();// 返回影响到的行数
 
-                            System.out.println("一共影响到" + num + "行");
-/*
+                            System.out.println("一共影响到" + num + "行");*/
                             JdbcTest jdbcTest = new JdbcTest(account.getPhone(), account.getPassword());
                             jdbcTest.initCookies();
                             Map<String, String> cookies = jdbcTest.cookies;
@@ -168,18 +167,23 @@ public class JdbcTest { //定义一个类
                                //.header("X-Requested-With", "XMLHttpRequest")
                                //.header("Content-Type", "application/x-www-form-urlencoded")
                                //.header("Upgrade-Insecure-Requests", "1")
-                              *//* .data("maddr[name]", "马洪文")
-                               .data("maddr[mobile]", "18254459299")
-                               .data("maddr[area]", "mainland:山东省/枣庄市/山亭区:1542")
-                               .data("maddr[addr]", "山东枣庄山亭区紫禁庄园 马洪文 18254459299-诗人")
-                               .data("maddr[is_default]", "true")*//*
-                                            .data("maddr[name]", "刘正周")
-                                            .data("maddr[mobile]", "13863749494")
-                                            .data("maddr[area]", "mainland:山东省/济宁市/微山县:1583")
-                                            .data("maddr[addr]", "山东省济宁市微山县苏园一村32号楼1单元888号--诗人")
+//                               .data("maddr[name]", "马洪文")
+//                               .data("maddr[mobile]", "18254459299")
+//                               .data("maddr[area]", "mainland:山东省/枣庄市/山亭区:1542")
+//                               .data("maddr[addr]", "山东枣庄山亭区紫禁庄园 马洪文 18254459299-诗人")
+//                               .data("maddr[is_default]", "true")
+//                                            .data("maddr[name]", "刘正周")
+//                                            .data("maddr[mobile]", "13863749494")
+//                                            .data("maddr[area]", "mainland:山东省/济宁市/微山县:1583")
+//                                            .data("maddr[addr]", "山东省济宁市微山县苏园一村32号楼1单元888号--诗人")
+//                                            .data("maddr[is_default]", "true")
+                                            .data("maddr[name]", "钟尚华")
+                                            .data("maddr[mobile]", "13540112643")
+                                            .data("maddr[area]", "mainland:四川省/成都市/成华区:2535")
+                                            .data("maddr[addr]", "东林小区--老板数签签（串串店）")
                                             .data("maddr[is_default]", "true")
                                .execute();
-                           System.out.println(account.getPhone() + "----" + account.getPassword() + "---ok");*/
+                           System.out.println(account.getPhone() + "----" + account.getPassword() + "---ok");
 
 
                         } catch (Exception e) {
@@ -187,7 +191,7 @@ public class JdbcTest { //定义一个类
                         }
                     }
                 }).start();
-//                Thread.sleep(13 * 1000);
+                Thread.sleep(17 * 1000);
             }
 
 
@@ -280,6 +284,22 @@ public class JdbcTest { //定义一个类
         }
     }
 
+    public static String replaceByPrefix(String str, String start, String end, String replace) {
+        if(!str.contains(start)) {
+            System.out.println("start : " + start + " is not exist");
+            return str;
+        }
+        if(!str.contains(end)) {
+            System.out.println("end : " + end + " is not exist");
+            return str;
+        }
+        StringBuilder sb = new StringBuilder();
+        String s1 = sb.append(str.split(start)[0].substring(0, str.split(start)[0].length() - 9))
+                .append(replace)
+                .append(str.split(start)[1].split(end)[1]).toString();
+        return s1;
+    }
+
     public static String getck(String s) throws Exception {
         StringBuilder sb = new StringBuilder()
                 .append("function getClearance(){")
@@ -297,6 +317,7 @@ public class JdbcTest { //定义一个类
         String overJs = "function getClearance2(){ var a" + resJs.split("document.cookie")[1].split("Path=/;'")[0] + "Path=/;';return a;};";
         overJs = overJs.replace("window.headless", "'undefined'");
         overJs = overJs.replace("return return", "return eval");
+        overJs = replaceByPrefix(overJs,"createElement", "firstChild.href", "\"https://mall.phicomm.com/\"");
         engine.eval(overJs);
         Invocable invocable2 = (Invocable) engine;
         String over = (String) invocable2.invokeFunction("getClearance2");
@@ -305,6 +326,7 @@ public class JdbcTest { //定义一个类
 
     public void toLoginPage() {
         try {
+//            Thread.sleep(5000);
             org.jsoup.Connection.Response execute = Jsoup.connect("https://mall.phicomm.com/passport-login.html")
                     .timeout(100000)
                     .header("Host", "mall.phicomm.com")
@@ -330,6 +352,7 @@ public class JdbcTest { //定义一个类
 
     public void doLogin(int tryCount) {
         try {
+//            Thread.sleep(5000);
             org.jsoup.Connection.Response loginResponse = Jsoup.connect("https://mall.phicomm.com/passport-post_login.html")
                     .method(org.jsoup.Connection.Method.POST)
                     .timeout(SystemConstant.TIME_OUT)
