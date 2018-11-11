@@ -250,6 +250,7 @@ public class SpliderRunnable implements Runnable {
                         } catch (Exception e) {
                             if(e.getMessage().contains("HTTP error fetching URL") || e.getMessage().contains("Read timed out")
                                 || e.getMessage().contains("Connection reset")
+                                || e.getMessage().contains("Connection refused")
                                 || e.getMessage().contains("Connection refused: connect")
                                 || e.getMessage().contains("Connection timed out: connect")) {
                                 info("ip被封禁或过期，换ip中----" + e.getMessage());
