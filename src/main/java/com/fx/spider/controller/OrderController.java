@@ -419,7 +419,21 @@ public class OrderController {
             return "获取物流失败";
         }
     }
-
+    public static String replaceByPrefix(String str, String start, String end, String replace) {
+        if(!str.contains(start)) {
+            System.out.println("start : " + start + " is not exist");
+            return str;
+        }
+        if(!str.contains(end)) {
+            System.out.println("end : " + end + " is not exist");
+            return str;
+        }
+        StringBuilder sb = new StringBuilder();
+        String s1 = sb.append(str.split(start)[0].substring(0, str.split(start)[0].length() - 9))
+                .append(replace)
+                .append(str.split(start)[1].split(end)[1]).toString();
+        return s1;
+    }
     private Map<String,String> getCookies(String phone, String password, int i, Proxy proxy) {
         try {
             Connection.Response response = Jsoup.connect("https://mall.phicomm.com/passport-login.html")
@@ -474,6 +488,7 @@ public class OrderController {
         String overJs = "function getClearance2(){ var a" + resJs.split("document.cookie")[1].split("Path=/;'")[0] + "Path=/;';return a;};";
         overJs = overJs.replace("window.headless", "'undefined'");
         overJs = overJs.replace("return return", "return eval");
+        overJs = replaceByPrefix(overJs,"createElement", "firstChild.href", "\"https://mall.phicomm.com/\"");
         engine.eval(overJs);
         Invocable invocable2 = (Invocable) engine;
         String over = (String) invocable2.invokeFunction("getClearance2");
