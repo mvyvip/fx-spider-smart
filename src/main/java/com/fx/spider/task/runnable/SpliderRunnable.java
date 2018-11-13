@@ -199,6 +199,7 @@ public class SpliderRunnable implements Runnable {
                         }
                         cd.await();
                     } catch (Exception e) {
+
                         log.error("下单失败： " + e.getMessage());
                         if(e.getMessage().contains("HTTP error fetching URL")) {
                             Thread.sleep(15 * 1000);
