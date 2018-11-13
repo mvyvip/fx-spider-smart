@@ -180,6 +180,8 @@ public class OrderController {
         List<OrderAccount> needGet = new ArrayList<>();
         List<OrderAccount> orderAccountList = accountService.findPage(page);
 
+        List<OrderAccount> faildList = new ArrayList<>();
+
         String[] values = accountService.findConfigByKey(SystemConstant.GOODS_URL).split("-");
         String goods = values[0];
 
@@ -194,12 +196,16 @@ public class OrderController {
                         Map<String, String> cookies = getCookies(orderAccount.getPhone(), orderAccount.getPassword(), 0, wdProxy);
                         if(MapUtils.isEmpty(cookies)) {
                             System.out.println(orderAccount.getPhone() + "----" + orderAccount.getPassword() + "---登录失败了------######");
+                            faildList.add(orderAccount);
                         }
                         if(MapUtils.isNotEmpty(cookies)) {
                             // String vc = getVc(cookies);
                             Thread.sleep(5000);
                             String vc = "0";
                             String body = getOrders(cookies, wdProxy, 1);
+                            if(body.endsWith("00")) {
+                                faildList.add(orderAccount);
+                            }
                             orderAccount.setVc(vc);
                             if(body.contains("暂无")) {
                                 needGet.add(orderAccount);
@@ -282,6 +288,12 @@ public class OrderController {
             // 等待线程执行完毕
         }
         System.out.println("开始");
+
+        System.out.println("===================================");
+        faildList.stream().forEach(orderAccount -> {
+            System.err.println(orderAccount.getPhone() + "----" + orderAccount.getPassword() + "----" + orderAccount.getVc());
+        });
+        System.out.println("===================================");
 
         needGet.stream().forEach(orderAccount -> {
             System.err.println(orderAccount.getPhone() + "----" + orderAccount.getPassword() + "----" + orderAccount.getVc());
@@ -571,7 +583,7 @@ public class OrderController {
             i++;
             if(i > 10) {
                 System.out.println("获取订单失败-######-" + cookies.get("_SID") + "---" + e.getMessage());
-                return "暂无";
+                return "暂无00";
             }
             return getOrders(cookies, proxy, i);
         }

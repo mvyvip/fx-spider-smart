@@ -50,103 +50,33 @@ public class JdbcTest { //定义一个类
             Statement stmt = conn.createStatement();   //8.构造一个statement对象来执行sql语句：主要有Statement，PreparedStatement，CallableStatement三种实例来实现
             ResultSet rs = stmt.executeQuery(querySql);//9.执行sql并返还结束 ；ResultSet executeQuery(String sqlString)：用于返还一个结果集（ResultSet）对象。
             while (rs.next()) {
-                 accounts.add(new Account(rs.getString("phone"), rs.getString("password")));
+//                 accounts.add(new Account(rs.getString("phone"), rs.getString("password")));
             }
 
-           /* String s = "" +
-                    "13027819805----hh778899\n" +
-                    "15519130649----hh778899\n" +
-                    "15599134703----hh778899\n" +
-                    "15519135158----hh778899\n" +
-                    "15585170091----hh778899\n" +
-                    "13158050156----hh778899\n" +
-                    "13037809217----hh778899\n" +
-                    "15519047310----hh778899\n" +
-                    "13158041504----hh778899\n" +
-                    "15585162102----hh778899\n" +
-                    "18586970860----fc123789\n" +
-                    "18586812295----fc123789\n" +
-                    "18586822363----fc123789\n" +
-                    "13037871204----fc123789\n" +
-                    "15519035126----fc123789\n" +
-                    "13027826645----fc123789\n" +
-                    "13124608147----fc123789\n" +
-                    "18585075726----fc123789\n" +
-                    "13007824247----fc123789\n" +
-                    "18585860803----fc123789\n" +
-                    "18586904392----fc123789\n" +
-                    "18586903580----fc123789\n" +
-                    "13007847663----fc123789\n" +
-                    "13017430804----fc123789\n" +
-                    "18586827176----fc123789\n" +
-                    "13037897293----fc123789\n" +
-                    "13007824195----fc123789\n" +
-                    "13158039547----xy666888\n" +
-                    "15599136127----xy666888\n" +
-                    "15519132782----xy666888\n" +
-                    "15585179448----xy666888\n" +
-                    "13037890227----xy666888\n" +
-                    "13195106546----xy666888\n" +
-                    "13037899780----xy666888\n" +
-                    "13017462469----xy666888\n" +
-                    "13078575507----xy666888\n" +
-                    "13027881437----xy666888\n" +
-                    "13017476193----xy666888\n" +
-                    "13195116593----xy666888\n" +
-                    "15519139647----xy666888\n" +
-                    "13007836701----xy666888\n" +
-                    "13195214035----xy666888\n" +
-                    "13078514736----xy666888\n" +
-                    "13158060241----xy666888\n" +
-                    "13037868529----xy666888\n" +
-                    "13027824820----xy666888\n" +
-                    "13116495183----xy666888\n" +
-                    "13116316487----xy666888\n" +
-                    "13158030614----xy666888\n" +
-                    "13017458654----xy666888\n" +
-                    "13027815697----xy666888\n" +
-                    "13195111734----xy666888\n" +
-                    "13195103647----xy666888\n" +
-                    "15519011496----xy666888\n" +
-                    "13195115413----xy666888\n" +
-                    "13123611040----xy666888\n" +
-                    "13195116124----xy666888\n" +
-                    "15585174784----xy666888\n" +
-                    "15519143891----xy666888\n" +
-                    "15685415326----xy666888\n" +
-                    "13158065412----xy666888\n" +
-                    "13049567429----xy666888\n" +
-                    "18585991689----xy666888\n" +
-                    "13158362124----xy666888\n" +
-                    "15597924329----xy666888\n" +
-                    "18586459169----xy666888\n" +
-                    "15597925839----xy666888\n" +
-                    "15685464829----xy666888\n" +
-                    "13017004069----xy666888\n" +
-                    "13195114827----xy666888\n" +
-                    "15688062961----xy666888\n" +
-                    "13116487539----xy666888\n" +
-                    "15688022859----xy666888\n" +
-                    "13158044995----xy666888\n" +
-                    "13123618904----xy666888\n" +
-                    "15519016590----xy666888\n" +
-                    "13116318448----xy666888\n" +
-                    "13116305694----xy666888\n" +
-                    "15519017880----xy666888\n" +
-                    "13238562029----xy666888"
+            String s = "" +
+                    "18601666430----lm511524\n"
+                + "15601653558----liuman511524\n"
+                + "18501668280----liu511524\n"
+                + "18362539181----liuman511624\n"
+                + "18700961191----liuman511524\n"
+                + "17701843197----liuman511524\n"
+                + "15106130654----liuman511524\n"
+                + "13564184245----liuman511524\n"
+                + "13122059601----liuman511524\n"
+                + "18456090200----liuman511524"
                     ;
 
-            String remark = "1253447449-VIP";
+            String remark = "774207065";
             for (String s1 : s.split("\n")) {
                 accounts.add(new Account(s1.split("----")[0], s1.split("----")[1]));
-            }*/
+            }
 
             for (Account account : accounts) {
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
                         try {
-                          /*  String sql = "INSERT INTO fx_order_account(phone,password,remark) VALUES(?,?,?)";
+                            String sql = "INSERT INTO fx_order_account(phone,password,remark) VALUES(?,?,?)";
                             // 获取PrepareStatement对象
                             PreparedStatement preparedStatement = conn.prepareStatement(sql);
                             // 填充占位符
@@ -156,8 +86,8 @@ public class JdbcTest { //定义一个类
                             // 执行sql
                             int num = preparedStatement.executeUpdate();// 返回影响到的行数
 
-                            System.out.println("一共影响到" + num + "行");*/
-                            JdbcTest jdbcTest = new JdbcTest(account.getPhone(), account.getPassword());
+                            System.out.println("一共影响到" + num + "行");
+                            /*JdbcTest jdbcTest = new JdbcTest(account.getPhone(), account.getPassword());
                             jdbcTest.initCookies();
                             Map<String, String> cookies = jdbcTest.cookies;
                                     Response execute = Jsoup.connect("https://mall.phicomm.com/my-receiver-save.html").method(org.jsoup.Connection.Method.POST).cookies(cookies)
@@ -183,7 +113,8 @@ public class JdbcTest { //定义一个类
                                             .data("maddr[addr]", "东林小区--老板数签签（串串店）")
                                             .data("maddr[is_default]", "true")
                                .execute();
-                           System.out.println(account.getPhone() + "----" + account.getPassword() + "---ok");
+                           System.out.println(account.getPhone() + "----" + account.getPassword() + "---ok");*/
+//                Thread.sleep(17 * 1000);
 
 
                         } catch (Exception e) {
@@ -191,7 +122,6 @@ public class JdbcTest { //定义一个类
                         }
                     }
                 }).start();
-                Thread.sleep(17 * 1000);
             }
 
 

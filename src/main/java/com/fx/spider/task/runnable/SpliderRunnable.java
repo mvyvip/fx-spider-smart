@@ -83,8 +83,8 @@ public class SpliderRunnable implements Runnable {
 
     public static void main(String[] args) {
         OrderAccount orderAccount = new OrderAccount("13648045607", "li5201314");
-//        SpliderRunnable spliderRunnable = new SpliderRunnable(orderAccount, "W3", "https://mall.phicomm.com/cart-fastbuy-197-1.html", "0", "f0c35c13b2fffac65e411939bc2de921");
-        SpliderRunnable spliderRunnable = new SpliderRunnable(orderAccount, "W1", "https://mall.phicomm.com/cart-fastbuy-14-1.html", "29900", "f0c35c13b2fffac65e411939bc2de921");
+        SpliderRunnable spliderRunnable = new SpliderRunnable(orderAccount, "W3", "https://mall.phicomm.com/cart-fastbuy-197-1.html", "0", "f0c35c13b2fffac65e411939bc2de921");
+//        SpliderRunnable spliderRunnable = new SpliderRunnable(orderAccount, "W1", "https://mall.phicomm.com/cart-fastbuy-14-1.html", "29900", "f0c35c13b2fffac65e411939bc2de921");
         spliderRunnable.run();
 //        String s = "var _1c = function() {\n" +
 //                "\t\t\n" +
@@ -200,6 +200,9 @@ public class SpliderRunnable implements Runnable {
                         cd.await();
                     } catch (Exception e) {
                         log.error("下单失败： " + e.getMessage());
+                        if(e.getMessage().contains("HTTP error fetching URL")) {
+                            Thread.sleep(15 * 1000);
+                        }
                     }
                 }
 
@@ -253,10 +256,13 @@ public class SpliderRunnable implements Runnable {
                                 || e.getMessage().contains("Connection refused")
                                 || e.getMessage().contains("Connection refused: connect")
                                 || e.getMessage().contains("Connection timed out: connect")) {
-                                info("ip被封禁或过期，换ip中----" + e.getMessage());
-                                proxyUtil.initIps();
-                                flag = false;
-                                start();
+
+                                if(new Date().getMinutes() > 8 && new Date().getMinutes() <= 58) {
+                                    info("ip被封禁或过期，换ip中----" + e.getMessage());
+                                    proxyUtil.initIps();
+                                    flag = false;
+                                    start();
+                                }
                             }
                             info("初始化>>>body失败--" + e.getMessage());
                         }
@@ -445,7 +451,7 @@ public class SpliderRunnable implements Runnable {
         } catch (Exception e) {
             info("获取 __jsl_clearance 失败，" + e.getMessage());
             if(e.getMessage().contains("HTTP error fetching URL") || e.getMessage().contains("Read timed out")
-                    || e.getMessage().contains("Connection refused: connect") || e.getMessage().contains("Connection reset")
+                    || e.getMessage().contains("Connection refused") || e.getMessage().contains("Connection reset")
                     || e.getMessage().contains("Connection timed out: connect")) {
                 info("ip被封禁或过期，换ip中----" + e.getMessage());
                 proxyUtil.initIps();
