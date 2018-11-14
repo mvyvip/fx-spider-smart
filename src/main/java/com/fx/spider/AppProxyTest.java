@@ -10,7 +10,7 @@ import okhttp3.Request;
 import okhttp3.Request.Builder;
 import okhttp3.Response;
 
-public class ProxyTest {
+public class AppProxyTest {
 
     public static List<String> hosts = new ArrayList<>();
 
@@ -98,13 +98,13 @@ public class ProxyTest {
                    try {
                        String host = getHosts();
 //                       String url = "http://" + getHosts() + "/cart-fastbuy-13-1.html";
-                       String url = "http://" + getHosts() + "/m/checkout-fastbuy.html";
+                       String url = "http://" + host + "/cart-fastbuy-13-1.html";
                        System.out.println(url);
                        OkHttpClient okHttpClient = new OkHttpClient();
                        final Request request = new Builder()
                            .url(url)
-                           .header("Cookie", "Hm_lvt_806df8bf4f865af1db1c724887359a8c=1542220570,1542220586,1542222848,1542223013; _SID=A88ADD098413F964442923EDFB930D3D; Hm_lvt_d7682ab43891c68a00de46e9ce5b76aa=1542218943,1542220360,1542220361,1542220629; __jsl_clearance=1542222290.156|0|LLn9SvaAIKrr83sy7WOhmjWeDo0%3D; CACHE_VARY=d8a3ac5eaa02cc9b268b60d696ef578f-9244d31d67c9dff15c6a27bbbb77f6ac; MEMBER_IDENT=6272948; MEMBER_LEVEL_ID=1; UNAME=13648045607; _VMC_UID=ecee97ca878c2b4140b242f453d1e8e4; __jsluid=88002394aaf25ec77a536d724290d8e9")
-                           .header("User-Agent", "Mozilla/5.0 (iPhone; CPU iPhone OS 11_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E302 VMCHybirdAPP-iOS/2.2.4/")
+                           .header("Cookie", "__jsluid=54d5a8a8c765c62f3287be364a258866; _VMC_UID=b74619d868761593c39e79325ad9205e; _SID=e46b208b9496d73ef77d344cd06c6764; Hm_lvt_d7682ab43891c68a00de46e9ce5b76aa=1541559313; c_dizhi=null; Hm_lvt_4532b50bd635e230f63e966a610afe18=1542095482; Hm_lpvt_4532b50bd635e230f63e966a610afe18=1542095482; Hm_lvt_c8bb97be004001570e447aa3e00ff0ad=1542164795,1542164907,1542164930,1542164961; __jsl_clearance=1542188289.517|0|A40l2qGyyznmx12kcJmzKeTfv3M%3D; UNAME=18928204717; MEMBER_IDENT=6516197; MEMBER_LEVEL_ID=1; CACHE_VARY=d8a3ac5eaa02cc9b268b60d696ef578f-0f063e018c840f8a56946ecec41a6c18; Hm_lpvt_c8bb97be004001570e447aa3e00ff0ad=1542188271")
+                           .header("User-Agent", "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36")
                            .header("Host", "mall.phicomm.com")
                            .build();
                        final Call call = okHttpClient.newCall(request);

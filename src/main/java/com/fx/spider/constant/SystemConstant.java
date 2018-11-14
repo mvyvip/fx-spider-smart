@@ -8,7 +8,7 @@ public interface SystemConstant {
 
     int THREAD_WAIT_TIME = 350;
 
-    int TIME_OUT = 30 * 1000;
+    int TIME_OUT = 45 * 1000;
 
     int TASK_COUNT = 2;
 

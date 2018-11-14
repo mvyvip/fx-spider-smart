@@ -8,28 +8,27 @@ import com.fx.spider.util.CookieUtils;
 import com.fx.spider.util.ProxyUtil;
 import com.fx.spider.util.UserAgentUtil;
 import com.fx.spider.util.feifei.FeiFeiUtil;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.DateUtils;
-import org.jsoup.Connection;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
-
-import javax.script.Invocable;
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import java.net.Proxy;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
+import javax.script.Invocable;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateUtils;
+import org.jsoup.Connection;
+import org.jsoup.Connection.Response;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
 @Slf4j
 @SuppressWarnings("all")
-public class SpliderRunnable implements Runnable {
+public class AppSpliderRunnable implements Runnable {
 
     private Integer updateCodeSecond = SystemConstant.UPDATE_CODE_SECOND;
 
@@ -53,15 +52,15 @@ public class SpliderRunnable implements Runnable {
 
     private OrderAccount account;
 
-    private ProxyUtil proxyUtil;
-
     private CountDownLatch countDownLatch = new CountDownLatch(1);
 
     private AtomicBoolean initCodeFlag = new AtomicBoolean(true);
 
     private boolean isLogin = false;
 
-    public SpliderRunnable(OrderAccount account, String goods, String goodsUrl, String vc, String key) {
+    private ProxyUtil proxyUtil;
+
+    public AppSpliderRunnable(OrderAccount account, String goods, String goodsUrl, String vc, String key) {
         this.account = account;
         this.goods = goods;
         this.goodsUrl = goodsUrl;
@@ -73,7 +72,6 @@ public class SpliderRunnable implements Runnable {
     public boolean checkStatus(Connection.Response response) {
         if(response.statusCode() == 403) {
             info("ip被封禁，换ip中");
-            proxyUtil.initIps();
             info("换ip成功，开始重新登录");
             start();
             return false;
@@ -82,8 +80,8 @@ public class SpliderRunnable implements Runnable {
     }
 
     public static void main(String[] args) {
-        OrderAccount orderAccount = new OrderAccount("13648045607", "li5201314");
-        SpliderRunnable spliderRunnable = new SpliderRunnable(orderAccount, "W3", "https://mall.phicomm.com/cart-fastbuy-197-1.html", "0", "f0c35c13b2fffac65e411939bc2de921");
+        OrderAccount orderAccount = new OrderAccount("13017488634", "xy666888");
+        AppSpliderRunnable spliderRunnable = new AppSpliderRunnable(orderAccount, "W3", "https://mall.phicomm.com/index.php/m/cart-fastbuy-197-1.html", "0", "f0c35c13b2fffac65e411939bc2de921");
 //        SpliderRunnable spliderRunnable = new SpliderRunnable(orderAccount, "W1", "https://mall.phicomm.com/cart-fastbuy-14-1.html", "29900", "f0c35c13b2fffac65e411939bc2de921");
         spliderRunnable.run();
     }
@@ -108,7 +106,8 @@ public class SpliderRunnable implements Runnable {
 
 
                 Document document = Jsoup.parse(rsbody);
-                String cart_md5 = getCartMd5(document);
+                String cart_md5 = document.body().toString().split("cart_md5:\"")[1].split("\"")[0];
+                String token = document.body().toString().split("token':'")[1].split("',")[0];
 
                 AtomicBoolean atomicBoolean = new AtomicBoolean(true);
                 while (atomicBoolean.get()) {
@@ -117,8 +116,8 @@ public class SpliderRunnable implements Runnable {
                             vcCodeJson = FeiFeiUtil.validate(Jsoup.connect(vcCodeUrl)
                                     .ignoreContentType(true)
                                     .cookies(cookies)
-                                    .userAgent(UserAgentUtil.get())
                                     .proxy(proxyUtil.getProxy())
+                                    .userAgent(UserAgentUtil.get())
                                     .timeout(SystemConstant.TIME_OUT).execute().bodyAsBytes());
                         }
                         String vcode = new String(vcCodeJson);
@@ -130,24 +129,25 @@ public class SpliderRunnable implements Runnable {
                                 @Override
                                 public void run() {
                                     try {
-                                        Connection.Response createOrderResponse = Jsoup.connect("https://mall.phicomm.com/order-create-is_fastbuy.html").method(Connection.Method.POST)
-                                                .proxy(proxyUtil.getProxy())
+                                        Connection.Response createOrderResponse = Jsoup.connect("https://mall.phicomm.com/m/order-create-is_fastbuy.html").method(Connection.Method.POST)
                                                 .timeout(60 * 1000).ignoreContentType(true)
                                                 .cookies(cookies)
+                                                .proxy(proxyUtil.getProxy())
                                                 .userAgent(UserAgentUtil.get())
                                                 .header("X-Requested-With", "XMLHttpRequest")
                                                 .data("cart_md5", cart_md5)
                                                 .data("addr_id", addrId)
                                                 .data("dlytype_id", "1")
                                                 .data("payapp_id", "alipay")
-                                                .data("yougouma", "")
-                                                .data("invoice_type", "")
+                                                .data("need_invoice", "true")
                                                 .data("invoice_title", "")
-                                                .data("useVcNum", vc)
-                                                .data("need_invoice2", "on")
-                                                .data("useDdwNum", "0")
+                                                .data("invoice_type", "3")
                                                 .data("memo", "")
                                                 .data("vcode", vcode)
+                                                .data("yougouma", "")
+                                                .data("useVcNum", vc)
+                                                .data("useDdwNum", "0")
+                                                .data("token", token)
                                                 .execute();
                                         info(JSONObject.parseObject(createOrderResponse.body()).toJSONString());
                                         if (createOrderResponse.body().contains("success")) {
@@ -179,15 +179,6 @@ public class SpliderRunnable implements Runnable {
         }
     }
 
-    private String getCartMd5(Document document) {
-        for (Element element : document.getElementsByTag("input")) {
-            if (element.attr("name").equals("cart_md5")) {
-                return element.attr("value");
-            }
-        }
-        throw new RuntimeException("cart_md5获取失败");
-    }
-
     private synchronized void updateRsBody(String body) {
         if (rsbody == null) {
             rsbody = body;
@@ -196,8 +187,28 @@ public class SpliderRunnable implements Runnable {
         }
     }
 
+    private void initGoods() {
+        try {
+            Connection.Response response = Jsoup.connect(goodsUrl).method(Connection.Method.GET)
+                .userAgent(UserAgentUtil.get())
+                .proxy(proxyUtil.getProxy())
+                .timeout(SystemConstant.TIME_OUT).cookies(cookies).followRedirects(true).execute();
+            String body = response.body();
+            if(body.contains("购物数量")) {
+                System.out.println("初始化成功");
+            } else {
+                System.out.println("未知异常");
+            }
+        } catch (Exception e) {
+            info("初始化商品失败： " + e.getMessage());
+            initGoods();
+        }
+    }
+
     private String initBody(Map<String, String> cookies) {
         boolean flag = true;
+        initGoods();
+
         while (flag) {
             try {
 //                Thread.sleep(SystemConstant.THREAD_WAIT_TIME);
@@ -205,15 +216,18 @@ public class SpliderRunnable implements Runnable {
 //                    @Override
 //                    public void run() {
                         try {
-                            Connection.Response response = Jsoup.connect(goodsUrl).method(Connection.Method.GET)
-                                    .proxy(proxyUtil.getProxy())
-                                    .userAgent(UserAgentUtil.get())
-                                    .timeout(SystemConstant.TIME_OUT).cookies(cookies).followRedirects(true).execute();
-                            String body = response.body();
-                            if (body.contains("库存不足,当前最多可售数量")) {
+
+                            Response execute = Jsoup.connect("https://mall.phicomm.com/index.php/m/checkout-fastbuy.html")
+                                .userAgent(UserAgentUtil.get())
+                                .proxy(proxyUtil.getProxy())
+                                .timeout(SystemConstant.TIME_OUT).cookies(cookies)
+                                .execute();
+                            String body = execute.body();
+
+                            if (body.contains("库存不足")) {
                                 info("库存不足 - " + new Date().toLocaleString());
-                                Thread.sleep(5500);
-                            } else if (body.contains("返回商品详情") || body.contains("cart_md5")) {
+                                Thread.sleep(5000);
+                            } else if (body.contains("cart_md5")) {
                                 flag = false;
                                 updateRsBody(body);
                             }
@@ -226,7 +240,6 @@ public class SpliderRunnable implements Runnable {
 
                                 if(new Date().getMinutes() > 8 && new Date().getMinutes() <= 58) {
                                     info("ip被封禁或过期，换ip中----" + e.getMessage());
-                                    proxyUtil.initIps();
                                     flag = false;
                                     start();
                                 }
@@ -282,7 +295,6 @@ public class SpliderRunnable implements Runnable {
      */
     private boolean initData() {
         try {
-            Thread.sleep(7 * 1000);
             vcCodeUrl = "https://mall.phicomm.com/vcode-index-passport" + cookies.get("MEMBER_IDENT") + ".html";
             Document document = Jsoup.connect("https://mall.phicomm.com/my-receiver.html").method(Connection.Method.GET).cookies(cookies)
                     .timeout(SystemConstant.TIME_OUT).userAgent(UserAgentUtil.get())
@@ -313,7 +325,6 @@ public class SpliderRunnable implements Runnable {
             info("--初始化地址失败" + e.getMessage());
             if(e.getMessage().contains("HTTP error fetching URL") || e.getMessage().contains("Read timed out") || e.getMessage().contains("Connection refused: connect")) {
                 info("ip被封禁或过期，换ip中----" + e.getMessage());
-                proxyUtil.initIps();
                 start();
             }
             return false;
@@ -336,12 +347,12 @@ public class SpliderRunnable implements Runnable {
 
     private String getVc(Map<String, String> cookies) {
         try {
-            Thread.sleep(7 * 1000);
+            Thread.sleep(3 * 1000);
             Document parse = Jsoup.connect("https://mall.phicomm.com/my-vclist.html")
                     .cookies(cookies)
+                    .proxy(proxyUtil.getProxy())
                     .userAgent(UserAgentUtil.get())
                     .timeout(SystemConstant.TIME_OUT)
-                    .proxy(proxyUtil.getProxy())
                     .execute().parse();
             String vc = parse.body().text().split("可用维C ")[1].split(" 冻结维C")[0];
             return vc;
@@ -363,8 +374,8 @@ public class SpliderRunnable implements Runnable {
                     .method(Connection.Method.POST)
                     .ignoreContentType(true)
                     .timeout(10000)
-                    .userAgent(UserAgentUtil.get())
                     .proxy(proxyUtil.getProxy())
+                    .userAgent(UserAgentUtil.get())
                     .cookies(cookies)
                     .execute();
             if (response.body().contains("暂无")) {
@@ -399,8 +410,8 @@ public class SpliderRunnable implements Runnable {
                     .header("Referer", "https://mall.phicomm.com/passport-login.html")
                     .header("Connection", "keep-alive")
                     .header("Upgrade-Insecure-Requests", "1")
-                    .timeout(SystemConstant.TIME_OUT)
                     .proxy(proxyUtil.getProxy())
+                    .timeout(SystemConstant.TIME_OUT)
                     .ignoreHttpErrors(true)
                     .execute();
 
@@ -409,7 +420,6 @@ public class SpliderRunnable implements Runnable {
             checkStatus(response);
             if(response.statusCode() == 403) {
                 info("ip被封禁，换ip中");
-                proxyUtil.initIps();
             } else {
                 cookies.put("__jsl_clearance", getck(body).split("=")[1]);
                 this.cookies = cookies;
@@ -421,7 +431,6 @@ public class SpliderRunnable implements Runnable {
                     || e.getMessage().contains("Connection refused") || e.getMessage().contains("Connection reset")
                     || e.getMessage().contains("Connection timed out: connect")) {
                 info("ip被封禁或过期，换ip中----" + e.getMessage());
-                proxyUtil.initIps();
             }
             initCookies();
         }
@@ -532,8 +541,8 @@ public class SpliderRunnable implements Runnable {
                     .header("Referer", "https://mall.phicomm.com/passport-login.html")
                     .header("Connection", "keep-alive")
                     .header("Upgrade-Insecure-Requests", "1")
-                    .proxy(proxyUtil.getProxy())
                     .cookies(this.cookies)
+                    .proxy(proxyUtil.getProxy())
                     .ignoreHttpErrors(true)
                     .execute();
             if(execute.statusCode() != 200) {
@@ -584,7 +593,6 @@ public class SpliderRunnable implements Runnable {
         } catch (Exception e) {
             if(e.getMessage().equals("HTTP error fetching URL") || e.getMessage().equals("Read timed out") || e.getMessage().equals("Connection refused: connect")) {
                 info("ip被封禁或过期，换ip中----" + e.getMessage());
-                proxyUtil.initIps();
                 start();
             } else {}
             info("登录失败，" + e.getMessage());
