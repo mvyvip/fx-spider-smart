@@ -108,6 +108,7 @@ public class AppSpliderRunnable implements Runnable {
                 Document document = Jsoup.parse(rsbody);
                 String cart_md5 = document.body().toString().split("cart_md5:\"")[1].split("\"")[0];
                 String token = document.body().toString().split("token':'")[1].split("',")[0];
+                initCodeFlag.set(false);
 
                 AtomicBoolean atomicBoolean = new AtomicBoolean(true);
                 while (atomicBoolean.get()) {
@@ -183,7 +184,6 @@ public class AppSpliderRunnable implements Runnable {
         if (rsbody == null) {
             rsbody = body;
             countDownLatch.countDown();
-            initCodeFlag.set(false);
         }
     }
 
@@ -195,7 +195,7 @@ public class AppSpliderRunnable implements Runnable {
                 .timeout(SystemConstant.TIME_OUT).cookies(cookies).followRedirects(true).execute();
             String body = response.body();
             if(body.contains("购物数量")) {
-                System.out.println("初始化成功");
+                info("初始化成功");
             } else {
                 System.out.println("未知异常");
             }
@@ -226,7 +226,7 @@ public class AppSpliderRunnable implements Runnable {
 
                             if (body.contains("库存不足")) {
                                 info("库存不足 - " + new Date().toLocaleString());
-                                Thread.sleep(5000);
+                                Thread.sleep(3000);
                             } else if (body.contains("cart_md5")) {
                                 flag = false;
                                 updateRsBody(body);
@@ -369,7 +369,7 @@ public class AppSpliderRunnable implements Runnable {
      */
     private boolean isNotOrdered() {
         try {
-            Thread.sleep(7 * 1000);
+            Thread.sleep(4 * 1000);
             Connection.Response response = Jsoup.connect("https://mall.phicomm.com/index.php/my-orders.html")
                     .method(Connection.Method.POST)
                     .ignoreContentType(true)

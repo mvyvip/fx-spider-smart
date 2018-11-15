@@ -3,6 +3,7 @@ package com.fx.spider.task;
 import com.fx.spider.constant.SystemConstant;
 import com.fx.spider.model.OrderAccount;
 import com.fx.spider.service.AccountService;
+import com.fx.spider.task.runnable.AppSpliderRunnable;
 import java.text.MessageFormat;
 import java.util.List;
 import javax.annotation.PostConstruct;
@@ -29,6 +30,9 @@ public class SpiderTask {
     @Value("${key}")
     private String key;
 
+    @Value("${type}")
+    private String type;
+
     @Autowired
     private AccountService accountService;
 
@@ -37,11 +41,11 @@ public class SpiderTask {
 
         String[] values = accountService.findConfigByKey(SystemConstant.GOODS_URL).split("-");
         String goods = values[0];
-        String goodsUrl = MessageFormat.format(SystemConstant.GOODS_URL, values[1]);
+        String goodsUrl = MessageFormat.format(type.equals("web") ? SystemConstant.GOODS_URL : SystemConstant.APP_GOODS_URL, values[1]);
         String vc = values[2];
 
         log.info("===========================================================================");
-        log.info("今日抢购:{}, vc:{}, url:{}", goods, vc, goodsUrl);
+        log.info("今日抢购:{}, vc:{}, url:{}, type: {}", goods, vc, goodsUrl, type);
         log.info("单个号单次抢购总IP:{}", count);
         log.info("===========================================================================");
 
@@ -67,7 +71,13 @@ public class SpiderTask {
                             public void run() {
                                 try {
                                     OrderAccount account = accounts.get(finalI);
-                                    new Thread(new SpliderRunnable(account, goods, goodsUrl, vc, key)).start();
+                                    if(type.equals("web")) {
+                                        System.out.println("web=====================");
+                                        new Thread(new SpliderRunnable(account, goods, goodsUrl, vc, key)).start();
+                                    } else {
+                                        System.out.println("app=====================");
+                                        new Thread(new AppSpliderRunnable(account, goods, goodsUrl, vc, key)).start();
+                                    }
                                 } catch (Exception e) {
                                     e.printStackTrace();
                                 }
