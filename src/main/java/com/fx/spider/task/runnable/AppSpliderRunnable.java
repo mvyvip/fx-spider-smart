@@ -66,7 +66,6 @@ public class AppSpliderRunnable implements Runnable {
         this.goodsUrl = goodsUrl;
         this.vc = vc;
         this.proxyUtil = new ProxyUtil(key);
-        proxyUtil.initIps();
     }
 
     public boolean checkStatus(Connection.Response response) {
@@ -88,14 +87,15 @@ public class AppSpliderRunnable implements Runnable {
 
     @Override
     public void run() {
-        try {
-            Thread.sleep(4 * 1000);
-        } catch (Exception e) {
-        }
         start();
     }
 
     private void start() {
+        proxyUtil.initIps();
+        try {
+            Thread.sleep(4 * 1000);
+        } catch (Exception e) {
+        }
         initCookies();
         if(isLogin && isNotOrdered() && vcIsEnough() && initData()) {
             try {
@@ -431,6 +431,7 @@ public class AppSpliderRunnable implements Runnable {
                     || e.getMessage().contains("Connection refused") || e.getMessage().contains("Connection reset")
                     || e.getMessage().contains("Connection timed out: connect")) {
                 info("ip被封禁或过期，换ip中----" + e.getMessage());
+                start();
             }
             initCookies();
         }
