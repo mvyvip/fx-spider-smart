@@ -6,7 +6,7 @@ public interface SystemConstant {
 
     String APP_GOODS_URL = "https://mall.phicomm.com/index.php/m/cart-fastbuy-{0}-1.html";
 
-    Integer UPDATE_CODE_SECOND = 50;
+    Integer UPDATE_CODE_SECOND = 44;
 
     int THREAD_WAIT_TIME = 350;
 

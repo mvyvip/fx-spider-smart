@@ -376,7 +376,7 @@ public class SpliderRunnable implements Runnable {
                 Date date = DateUtils.parseDateStrictly(table1.getElementsByTag("li").get(1).text().trim(), "yyyy-MM-dd HH:mm");
                 if (table1.text().contains(goods) && (!table1.text().contains("已取消")) && date.getTime() > DateUtils.addDays(new Date(), -7).getTime()) {
                     info("----已抢购---" + goods);
-                    return false;
+                    return true;
                 }
                 return true;
 
