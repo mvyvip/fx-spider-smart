@@ -226,7 +226,7 @@ public class AppSpliderRunnable implements Runnable {
 
                             if (body.contains("库存不足")) {
                                 info("库存不足 - " + new Date().toLocaleString());
-                                Thread.sleep(3000);
+                                Thread.sleep(5500);
                             } else if (body.contains("cart_md5")) {
                                 flag = false;
                                 updateRsBody(body);
