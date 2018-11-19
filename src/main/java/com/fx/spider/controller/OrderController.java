@@ -15,6 +15,7 @@ import com.fx.spider.util.UserAgentUtil;
 
 import java.net.InetSocketAddress;
 import java.net.Proxy;
+import java.net.Proxy.Type;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -26,6 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
@@ -173,11 +175,13 @@ public class OrderController {
         }
     }
 
+
+
     @GetMapping("/orders")
     public Object findAllOrder(String name, String type, Page page) throws Exception {
         Map<String, Object> result = new HashMap<>();
         List<OrderAccount> orders = new ArrayList<>();
-        List<OrderAccount> needGet = new ArrayList<>();
+        List<OrderAccount> temp = new ArrayList<>();
         List<OrderAccount> orderAccountList = accountService.findPage(page);
 
         List<OrderAccount> faildList = new ArrayList<>();
@@ -186,7 +190,198 @@ public class OrderController {
         String goods = values[0];
 
         AtomicInteger atomicInteger = new AtomicInteger(0);
-        for (OrderAccount orderAccount : orderAccountList) {
+        for (int i = 0; i < orderAccountList.size(); i++) {
+            temp.add(orderAccountList.get(i));
+            if(i%100 == 0) {
+                List<ProxyEntity> wdProxy = new ProxyUtil(key).get50WdProxy();
+                for (int j = 0; j < temp.size(); j++) {
+                    OrderAccount ac = temp.get(j);
+                    int finalI = i;
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                Proxy proxy = new Proxy(Type.HTTP, new InetSocketAddress(wdProxy.get(finalI).getIp(), wdProxy.get(finalI).getPort()));
+                                Map<String, String> cookies = getCookies(ac.getPhone(), ac.getPassword(), 0, proxy);
+                                ac.setVc("0");
+                                if(MapUtils.isEmpty(cookies)) {
+                                    ac.setRemark(ac.getRemark() + "---密码错误");
+                                    orders.add(ac);
+                                } else {
+                                    String body = getOrders(cookies, proxy, 1);
+                                    if(body.contains("暂无00")) {
+                                        ac.setRemark(ac.getRemark() + "---" + "查单失败");
+                                        orders.add(ac);
+                                    } else {
+                                        if(!body.contains("暂无")) {
+                                            Document document = Jsoup.parse(body);
+                                            Elements tables = document.getElementsByTag("table");
+                                            boolean flag = true;
+                                            for (int i = 1; i < tables.size(); i++) {
+                                                OrderAccount order = new OrderAccount();
+                                                Element table = tables.get(i);
+                                                Elements elements = table.getElementsByClass("text-muted");
+                                                ac.setGoodsName(elements.get(1).text().trim());
+                                                ac.setOrderNo(elements.get(0).text().replaceAll("  ", "").trim());
+                                                ac.setOrderCreateDate(table.getElementsByTag("li").get(1).text().trim());
+                                                ac.setStatus(table.getElementsByTag("span").text().trim());
+                                                Date date = DateUtils.parseDateStrictly(order.getOrderCreateDate(), "yyyy-MM-dd HH:mm");
+
+                                                Elements as = table.getElementsByTag("a");
+                                                for (Element a : as) {
+                                                    if(a.text().contains("确认收货")) {
+                                                        try {
+                                                            String href = a.attr("href");
+                                                            Thread.sleep(5000);
+                                                            Connection.Response execute = Jsoup.connect("https://mall.phicomm.com" + href)
+                                                                .cookies(cookies).userAgent(UserAgentUtil.get())
+                                                                .timeout(SystemConstant.TIME_OUT)
+                                                                .proxy(proxy).validateTLSCertificates(false)
+                                                                .execute();
+                                                            if(execute.body().contains("订单确认收货成功")) {
+                                                                log.info(ac.getPhone() + "--- " + "收货成功");
+                                                            } else {
+                                                                log.info(ac.getPhone() + " ----" + ac.getPassword() + "--- " + "收货失败");
+                                                            }
+                                                        } catch (Exception e) {
+                                                            log.info("收货失败--" + e.getMessage() + "----" + ac.getPhone() + "----" + ac.getPassword());
+                                                        }
+                                                    }
+                                                }
+
+                                                if(date.getTime() > DateUtils.addDays(new Date(), -15).getTime()) {
+                                                    Elements aElements = table.getElementsByTag("a");
+                                                    Thread.sleep(5000);
+                                                    setDetail(cookies, aElements, order, 0, proxy);
+                                                    order.setOrderCreateDate(table.getElementsByTag("li").get(1).text().trim());
+                                                    flag = false;
+
+                                                    if(StringUtils.isNotEmpty(name) && !order.getAddress().contains(name)) {
+                                                        continue;
+                                                    }
+
+                                                    if(StringUtils.isNotEmpty(type)) {
+                                                        if(type.equals("1")  && !order.getLogisticsInfo().contains("签收")) {
+                                                            continue;
+                                                        } else if(type.equals("2") && order.getLogisticsInfo().contains("签收")) {
+                                                            continue;
+                                                        }
+                                                    }
+                                                    orders.add(order);
+                                                }
+
+                                            }
+                                        }
+                                    }
+
+                                }
+                            } catch (Exception e) {
+                                System.out.println("查询失败---" + e.getMessage() + "---" + ac.getPhone() + "----" + ac.getPassword());
+                            } finally {
+                                System.err.println("当前处理的条数>>> " + atomicInteger.incrementAndGet());
+                            }
+                        }
+                    }).start();
+
+                    temp.clear();
+                    Thread.sleep(15 * 1000);
+                }
+            }
+        }
+
+        List<ProxyEntity> wdProxy = new ProxyUtil(key).get50WdProxy();
+        for (int i = 0; i < temp.size(); i++) {
+            OrderAccount ac = temp.get(i);
+            int finalI = i;
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        Map<String, String> cookies = getCookies(ac.getPhone(), ac.getPassword(), 0,
+                            new Proxy(Proxy.Type.HTTP, new InetSocketAddress(wdProxy.get(finalI).getIp(), wdProxy.get(finalI).getPort())));
+                        ac.setVc("0");
+                        if(MapUtils.isEmpty(cookies)) {
+                            ac.setRemark(ac.getRemark() + "---密码错误");
+                            orders.add(ac);
+                        } else {
+                            String body = getOrders(cookies, new Proxy(Proxy.Type.HTTP, new InetSocketAddress(wdProxy.get(finalI).getIp(), wdProxy.get(finalI).getPort())), 1);
+                            if(body.contains("暂无00")) {
+                                ac.setRemark(ac.getRemark() + "---" + "查单失败");
+                                orders.add(ac);
+                            } else {
+                                if(!body.contains("暂无")) {
+                                    Document document = Jsoup.parse(body);
+                                    Elements tables = document.getElementsByTag("table");
+                                    boolean flag = true;
+                                    for (int i = 1; i < tables.size(); i++) {
+                                        OrderAccount order = new OrderAccount();
+                                        Element table = tables.get(i);
+                                        Elements elements = table.getElementsByClass("text-muted");
+                                        ac.setGoodsName(elements.get(1).text().trim());
+                                        ac.setOrderNo(elements.get(0).text().replaceAll("  ", "").trim());
+                                        ac.setOrderCreateDate(table.getElementsByTag("li").get(1).text().trim());
+                                        ac.setStatus(table.getElementsByTag("span").text().trim());
+                                        Date date = DateUtils.parseDateStrictly(order.getOrderCreateDate(), "yyyy-MM-dd HH:mm");
+
+                                        Elements as = table.getElementsByTag("a");
+                                        for (Element a : as) {
+                                            if(a.text().contains("确认收货")) {
+                                                try {
+                                                    String href = a.attr("href");
+                                                    Thread.sleep(5000);
+                                                    Connection.Response execute = Jsoup.connect("https://mall.phicomm.com" + href)
+                                                        .cookies(cookies).userAgent(UserAgentUtil.get())
+                                                        .timeout(SystemConstant.TIME_OUT)
+                                                        .proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(wdProxy.get(finalI).getIp(), wdProxy.get(finalI).getPort()))).validateTLSCertificates(false)
+                                                        .execute();
+                                                    if(execute.body().contains("订单确认收货成功")) {
+                                                        log.info(ac.getPhone() + "--- " + "收货成功");
+                                                    } else {
+                                                        log.info(ac.getPhone() + " ----" + ac.getPassword() + "--- " + "收货失败");
+                                                    }
+                                                } catch (Exception e) {
+                                                    log.info("收货失败--" + e.getMessage() + "----" + ac.getPhone() + "----" + ac.getPassword());
+                                                }
+                                            }
+                                        }
+
+                                        if(date.getTime() > DateUtils.addDays(new Date(), -15).getTime()) {
+                                            Elements aElements = table.getElementsByTag("a");
+                                            Thread.sleep(5000);
+                                            setDetail(cookies, aElements, order, 0, new Proxy(Proxy.Type.HTTP, new InetSocketAddress(wdProxy.get(finalI).getIp(), wdProxy.get(finalI).getPort())));
+                                            order.setOrderCreateDate(table.getElementsByTag("li").get(1).text().trim());
+                                            flag = false;
+
+                                            if(StringUtils.isNotEmpty(name) && !order.getAddress().contains(name)) {
+                                                continue;
+                                            }
+
+                                            if(StringUtils.isNotEmpty(type)) {
+                                                if(type.equals("1")  && !order.getLogisticsInfo().contains("签收")) {
+                                                    continue;
+                                                } else if(type.equals("2") && order.getLogisticsInfo().contains("签收")) {
+                                                    continue;
+                                                }
+                                            }
+                                            orders.add(order);
+                                        }
+
+                                    }
+                                }
+                            }
+
+                        }
+                    } catch (Exception e) {
+                        System.out.println("查询失败---" + e.getMessage() + "---" + ac.getPhone() + "----" + ac.getPassword());
+                    } finally {
+                        System.err.println("当前处理的条数>>> " + atomicInteger.incrementAndGet());
+                    }
+                }
+            }).start();
+        }
+
+
+       /* for (OrderAccount orderAccount : orderAccountList) {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -283,6 +478,131 @@ public class OrderController {
             }).start();
             Thread.sleep(5200);
         }
+*/
+        while (!(atomicInteger.get() == orderAccountList.size())) {
+            // 等待线程执行完毕
+        }
+        System.out.println("开始");
+
+        result.put("code", 0);
+        result.put("count", accountService.findAll().size());
+        result.put("data", orders);
+
+        return result;
+    }
+
+/*
+
+    @GetMapping("/orders")
+    public Object findAllOrder(String name, String type, Page page) throws Exception {
+        Map<String, Object> result = new HashMap<>();
+        List<OrderAccount> orders = new ArrayList<>();
+        List<OrderAccount> needGet = new ArrayList<>();
+        List<OrderAccount> orderAccountList = accountService.findPage(page);
+
+        List<OrderAccount> faildList = new ArrayList<>();
+
+        String[] values = accountService.findConfigByKey(SystemConstant.GOODS_URL).split("-");
+        String goods = values[0];
+
+        AtomicInteger atomicInteger = new AtomicInteger(0);
+        for (OrderAccount orderAccount : orderAccountList) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        ProxyUtil proxyUtil = new ProxyUtil(key);
+                        Proxy wdProxy = proxyUtil.getWdProxy();
+                        Map<String, String> cookies = getCookies(orderAccount.getPhone(), orderAccount.getPassword(), 0, wdProxy);
+                        if(MapUtils.isEmpty(cookies)) {
+                            System.out.println(orderAccount.getPhone() + "----" + orderAccount.getPassword() + "---登录失败了------######");
+                            faildList.add(orderAccount);
+                        }
+                        if(MapUtils.isNotEmpty(cookies)) {
+                            // String vc = getVc(cookies);
+                            Thread.sleep(5000);
+                            String vc = "0";
+                            String body = getOrders(cookies, wdProxy, 1);
+                            if(body.endsWith("00")) {
+                                faildList.add(orderAccount);
+                            }
+                            orderAccount.setVc(vc);
+                            if(body.contains("暂无")) {
+                                needGet.add(orderAccount);
+                                log.info(orderAccount.getPhone() + "----" + orderAccount.getPassword() + "----无订单");
+                            } else {
+                                Document document = Jsoup.parse(body);
+                                Elements tables = document.getElementsByTag("table");
+
+                                boolean flag = true;
+                                for (int i = 1; i < tables.size(); i++) {
+                                    OrderAccount order = new OrderAccount();
+                                    order.setVc(vc);
+                                    order.setRemark(orderAccount.getRemark());
+                                    Element table = tables.get(i);
+
+                                    Elements elements = table.getElementsByClass("text-muted");
+                                    order.setPhone(orderAccount.getPhone());
+                                    order.setPassword(orderAccount.getPassword());
+                                    order.setGoodsName(elements.get(1).text().trim());
+                                    order.setOrderNo(elements.get(0).text().replaceAll("  ", "").trim());
+                                    order.setOrderCreateDate(table.getElementsByTag("li").get(1).text().trim());
+                                    order.setStatus(table.getElementsByTag("span").text().trim());
+                                    Date date = DateUtils.parseDateStrictly(order.getOrderCreateDate(), "yyyy-MM-dd HH:mm");
+
+                                    Elements as = table.getElementsByTag("a");
+                                    for (Element a : as) {
+                                        if(a.text().contains("确认收货")) {
+                                            String href = a.attr("href");
+                                            Connection.Response execute = Jsoup.connect("https://mall.phicomm.com" + href)
+                                                .cookies(cookies).userAgent(UserAgentUtil.get())
+                                                .timeout(SystemConstant.TIME_OUT)
+                                                .proxy(wdProxy).validateTLSCertificates(false)
+                                                .execute();
+                                            if(execute.body().contains("订单确认收货成功")) {
+                                                log.info(orderAccount.getPhone() + "--- " + "收货成功");
+                                            } else {
+                                                log.info(orderAccount.getPhone() + " ----" + orderAccount.getPassword() + "--- " + "收货失败");
+                                            }
+                                        }
+                                    }
+
+
+                                    if(date.getTime() > DateUtils.addDays(new Date(), -15).getTime()) {
+                                        Elements aElements = table.getElementsByTag("a");
+                                        Thread.sleep(5000);
+                                        setDetail(cookies, aElements, order, 0, wdProxy);
+                                        order.setOrderCreateDate(table.getElementsByTag("li").get(1).text().trim());
+                                        flag = false;
+
+                                        if(StringUtils.isNotEmpty(name) && !order.getAddress().contains(name)) {
+                                            continue;
+                                        }
+
+                                        if(StringUtils.isNotEmpty(type)) {
+                                            if(type.equals("1")  && !order.getLogisticsInfo().contains("签收")) {
+                                                continue;
+                                            } else if(type.equals("2") && order.getLogisticsInfo().contains("签收")) {
+                                                continue;
+                                            }
+                                        }
+                                        orders.add(order);
+                                    }
+                                }
+                                if(flag) {
+                                    needGet.add(orderAccount);
+                                }
+                            }
+                        }
+                    } catch (Exception e) {
+                        log.error("登录失败： " + e.getMessage());
+                    } finally {
+                        System.err.println("xxx>>> " + atomicInteger.incrementAndGet());
+                    }
+                }
+            }).start();
+            Thread.sleep(5200);
+        }
 
         while (!(atomicInteger.get() == orderAccountList.size())) {
             // 等待线程执行完毕
@@ -305,6 +625,8 @@ public class OrderController {
 
         return result;
     }
+*/
+
 
     @GetMapping("/accounts")
     public Object accounts(String name, String type) throws Exception {
@@ -465,7 +787,7 @@ public class OrderController {
             cookies.put("__jsl_clearance", getck(body).split("=")[1]);
             return toLoginPage(proxy, cookies, phone, password);
         } catch (Exception e) {
-            log.error("获取 __jsl_clearance 失败，{}", e.getMessage());
+//            log.error("获取 __jsl_clearance 失败，{}", e.getMessage());
             if(e.getMessage().equals("HTTP error fetching URL") || e.getMessage().equals("Read timed out")
                     || e.getMessage().equals("Connection refused: connect")
                     || e.getMessage().equals("Connection timed out: connect")) {
@@ -557,6 +879,9 @@ public class OrderController {
                     .data("password", password)
                     .execute();
             System.out.println((JSON.parseObject(loginResponse.body()).toString()));
+            if(JSON.parseObject(loginResponse.body()).toString().contains("账号或密码错误")) {
+                return null;
+            }
             if (loginResponse.body().contains("error")) {
                 throw new RuntimeException("账号或密码错误");
             }
@@ -581,7 +906,7 @@ public class OrderController {
             return response.body();
         } catch (Exception e) {
             i++;
-            if(i > 10) {
+            if(i > 2) {
                 System.out.println("获取订单失败-######-" + cookies.get("_SID") + "---" + e.getMessage());
                 return "暂无00";
             }
