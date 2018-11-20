@@ -563,6 +563,11 @@ public class OrderController {
             cookies.putAll(loginResponse.cookies());
         } catch (Exception e) {
             System.out.println("登录失败--" + phone + "---" + password + "---" + e.getMessage());
+            tryCount++;
+            if(tryCount > 5) {
+                return cookies;
+            }
+            return doLogin(cookies, proxy, tryCount, phone, password);
         }
         return cookies;
     }

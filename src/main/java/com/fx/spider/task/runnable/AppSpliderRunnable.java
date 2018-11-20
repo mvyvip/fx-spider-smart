@@ -245,6 +245,9 @@ public class AppSpliderRunnable implements Runnable {
                                 }
                             }
                             info("初始化>>>body失败--" + e.getMessage());
+                            if(e.getMessage().contains("HTTP error fetching URL")) {
+                                Thread.sleep(20 * 1000);
+                            }
                         }
 //                    }
 //                }).start();
