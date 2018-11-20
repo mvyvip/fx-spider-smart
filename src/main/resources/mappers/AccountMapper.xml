@@ -18,4 +18,8 @@
         SELECT * FROM fx_order_account LIMIT #{page}, #{limit}
     </select>
 
+    <update id="updateStatus" parameterType="string">
+        UPDATE fx_order_account set status = 2 WHERE phone = #{mobile}
+    </update>
+
 </mapper>
