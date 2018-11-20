@@ -14,4 +14,5 @@ public interface AccountService {
 
     List<OrderAccount> findPage(Page page);
 
+    void updateStatus(String phone);
 }

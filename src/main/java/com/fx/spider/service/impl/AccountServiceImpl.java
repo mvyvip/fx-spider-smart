@@ -33,4 +33,9 @@ public class AccountServiceImpl implements AccountService {
     public List<OrderAccount> findPage(Page page) {
         return accountMapper.findPage(page);
     }
+
+    @Override
+    public void updateStatus(String phone) {
+        accountMapper.updateStatus(phone);
+    }
 }

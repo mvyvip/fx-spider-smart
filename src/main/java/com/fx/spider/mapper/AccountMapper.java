@@ -13,4 +13,6 @@ public interface AccountMapper {
     String findConfigByKey(String goodsUrl);
 
     List<OrderAccount> findPage(Page page);
+
+    void updateStatus(String phone);
 }
