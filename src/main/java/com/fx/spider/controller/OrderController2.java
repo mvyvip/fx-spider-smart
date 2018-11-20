@@ -222,8 +222,8 @@ public class OrderController2 {
                     || e.getMessage().contains("Connection timed out")
                     || e.getMessage().contains("403")
                     ) {
-                proxy = initProxy();
             }
+            proxy = initProxy();
             return initCookies(phone, password, cookies, proxy);
         }
     }
