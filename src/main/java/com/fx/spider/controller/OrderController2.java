@@ -171,6 +171,7 @@ public class OrderController2 {
 
     private boolean initVc(Map<String, String> cookies, Proxy proxy, OrderAccount ac) {
         try {
+            Thread.sleep(5000);
             Document parse = Jsoup.connect("https://mall.phicomm.com/my-vclist.html")
                     .cookies(cookies)
                     .userAgent(UserAgentUtil.get())
