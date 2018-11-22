@@ -39,8 +39,11 @@ public class OrderAccount {
     private String defaultAddress;
 
     private String vc;
+    private String vc2;
 
     private String renzheng;
+
+    private boolean passwordFaild;
 
     /** 物流号 */
     private String logisticsNum;

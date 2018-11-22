@@ -1,17 +1,19 @@
 package com.fx.spider.controller;
 
 import com.alibaba.fastjson.JSON;
-import com.fx.spider.AccountUtil;
 import com.fx.spider.constant.SystemConstant;
 import com.fx.spider.model.OrderAccount;
 import com.fx.spider.model.Page;
 import com.fx.spider.model.ProxyEntity;
 import com.fx.spider.service.AccountService;
-import com.fx.spider.util.PandaProxyUtil;
 import com.fx.spider.util.ProxyUtil;
 import com.fx.spider.util.UserAgentUtil;
+import java.net.Proxy.Type;
+import java.util.Date;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.MapUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateUtils;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -41,6 +43,170 @@ public class OrderController2 {
     @Autowired
     private AccountService accountService;
 
+    @GetMapping("/orders2")
+    public Object orders2(Page page) throws Exception {
+        List<OrderAccount> orderAccountList = accountService.findPage(page);
+        List<OrderAccount> temp = new ArrayList<>();
+        Map<String, Object> result = new HashMap<>();
+        result.put("code", 0);
+        result.put("count", accountService.findAll().size());
+        result.put("data", orderAccountList);
+        CountDownLatch countDownLatch = new CountDownLatch(orderAccountList.size());
+        AtomicInteger atomicInteger = new AtomicInteger(0);
+
+        for (int i = 0; i < orderAccountList.size(); i++) {
+            temp.add(orderAccountList.get(i));
+            if(temp.size() % 100 == 0) {
+                doTask(temp, countDownLatch, atomicInteger);
+                temp.clear();
+                System.out.println(i + "----" + temp.size());
+            }
+        }
+        System.out.println(temp.size() + "---count: " + orderAccountList.size());
+        doTask(temp, countDownLatch, atomicInteger);
+
+        return result;
+    }
+
+    public Map<String, String> initCk(OrderAccount ac, String phone, String password, Map<String, String> cookies, Proxy proxy, int i) throws Exception {
+        Map<String, String> cks = initCookies(ac, ac.getPhone(), ac.getPassword(), new HashMap<String, String>(), proxy);
+        if(MapUtils.isEmpty(cookies) || (ac.getRemark() != null && !ac.getRemark().contains("--"))) {
+            if(i > 3) {
+                return null;
+            }
+            i++;
+            log.info("{}----{}----第[{}]次重试登录", phone, password, i);
+            return initCk(ac, phone, password, cookies, getNewProxy(), i);
+        }
+        return cks;
+    }
+
+    public void doTask(List<OrderAccount> temp, CountDownLatch countDownLatch, AtomicInteger atomicInteger) throws Exception {
+        List<ProxyEntity> proxyEntities = new ProxyUtil("f0c35c13b2fffac65e411939bc2de921").get50WdProxy();
+        for (int i = 0; i < temp.size(); i++) {
+            OrderAccount orderAccount = temp.get(i);
+            Proxy proxy = new Proxy(Type.HTTP, new InetSocketAddress(proxyEntities.get(i).getIp(), proxyEntities.get(i).getPort()));
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                   try {
+                       boolean flag = true;
+                       Proxy proxy1 = proxy;
+                       Map<String, String> cookies = initCookies(orderAccount, orderAccount.getPhone(), orderAccount.getPassword(), new HashMap<String, String>(), proxy1);
+                       if(MapUtils.isEmpty(cookies) || (orderAccount.getRemark() != null && !orderAccount.getRemark().contains("--"))) {
+                           proxy1 = getNewProxy();
+                           cookies = initCk(orderAccount, orderAccount.getPhone(), orderAccount.getPassword(), new HashMap<String, String>(), proxy1, 1);
+                           if(MapUtils.isEmpty(cookies)) {
+                                flag = false;
+                           }
+                       }
+                       if(flag) {
+                           String body = getOrders(cookies, proxy1, 1);
+                           if(body.contains("暂无")) {
+                               log.info(orderAccount.getPhone() + "----" + orderAccount.getPassword() + "----无订单");
+                           } else {
+                               Document document = Jsoup.parse(body);
+                               Elements tables = document.getElementsByTag("table");
+
+                               boolean flag2 = true;
+                               for (int i = 1; i < tables.size(); i++) {
+                                   OrderAccount order = new OrderAccount();
+                                   order.setRemark(orderAccount.getRemark());
+                                   Element table = tables.get(i);
+
+                                   Elements elements = table.getElementsByClass("text-muted");
+                                   order.setPhone(orderAccount.getPhone());
+                                   order.setPassword(orderAccount.getPassword());
+                                   order.setGoodsName(elements.get(1).text().trim());
+                                   order.setOrderNo(elements.get(0).text().replaceAll("  ", "").trim());
+                                   order.setOrderCreateDate(table.getElementsByTag("li").get(1).text().trim());
+                                   order.setStatus(table.getElementsByTag("span").text().trim());
+                                   Date date = DateUtils.parseDateStrictly(order.getOrderCreateDate(), "yyyy-MM-dd HH:mm");
+
+                                   Elements as = table.getElementsByTag("a");
+                                   for (Element a : as) {
+                                       if(a.text().contains("确认收货")) {
+                                           String href = a.attr("href");
+                                           Connection.Response execute = Jsoup.connect("https://mall.phicomm.com" + href)
+                                               .cookies(cookies).userAgent(UserAgentUtil.get())
+                                               .timeout(SystemConstant.TIME_OUT)
+                                               .proxy(proxy1).validateTLSCertificates(false)
+                                               .execute();
+                                           if(execute.body().contains("订单确认收货成功")) {
+                                               log.info(orderAccount.getPhone() + "--- " + "收货成功");
+                                           } else {
+                                               log.info(orderAccount.getPhone() + " ----" + orderAccount.getPassword() + "--- " + "收货失败");
+                                           }
+                                       }
+                                   }
+
+
+                                   if(date.getTime() > DateUtils.addDays(new Date(), -7).getTime()) {
+                                       Elements aElements = table.getElementsByTag("a");
+                                       Thread.sleep(5000);
+//                                       setDetail(cookies, aElements, order, 0, wdProxy);
+                                       order.setOrderCreateDate(table.getElementsByTag("li").get(1).text().trim());
+                                       flag = false;
+
+                                       if(order.getGoodsName().contains("T1") && !order.getGoodsName().contains("优购码")) {
+                                           accountService.updateStatus(order.getPhone());
+                                       }
+
+                                      /* if(StringUtils.isNotEmpty(name) && !order.getAddress().contains(name)) {
+                                           continue;
+                                       }
+
+                                       if(StringUtils.isNotEmpty(type)) {
+                                           if(type.equals("1")  && !order.getLogisticsInfo().contains("签收")) {
+                                               continue;
+                                           } else if(type.equals("2") && order.getLogisticsInfo().contains("签收")) {
+                                               continue;
+                                           }
+                                       }
+                                       orders.add(order);*/
+                                   }
+                               }
+                               if(flag) {
+//                                   needGet.add(orderAccount);
+                               }
+                           }
+
+
+                       }
+                   } catch (Exception e) {
+                       log.error("查单失败--" + e.getMessage());
+                   } finally {
+                       countDownLatch.countDown();
+                       System.out.println("当前处理到--> " + atomicInteger.incrementAndGet());
+                   }
+                }
+            }).start();
+        }
+        Thread.sleep(5300);
+    }
+
+    private String getOrders(Map<String, String> cookies, Proxy proxy, int i) {
+        try {
+            Thread.sleep(3000);
+            Connection.Response response = Jsoup.connect("https://mall.phicomm.com/index.php/my-orders.html")
+                .method(Connection.Method.POST)
+                .ignoreContentType(true)
+                .timeout(10 * 1000)
+                .userAgent(UserAgentUtil.get())
+                .proxy(proxy).validateTLSCertificates(false)
+                .cookies(cookies)
+                .execute();
+            return response.body();
+        } catch (Exception e) {
+            i++;
+            if(i > 5) {
+                System.out.println("获取订单失败-######-" + cookies.get("_SID") + "---" + e.getMessage());
+                return "暂无00";
+            }
+            return getOrders(cookies, proxy, i);
+        }
+    }
+
     @GetMapping("/accounts2")
     public Object accounts2(Page page) throws Exception {
         List<OrderAccount> orderAccountList = accountService.findPage(page);
@@ -57,17 +223,19 @@ public class OrderController2 {
                 List<ProxyEntity> proxyEntities = new ProxyUtil("f0c35c13b2fffac65e411939bc2de921").get50WdProxy();
                 for (int j = 0; j < temp.size(); j++) {
                     OrderAccount ac = temp.get(j);
+                    datas.add(ac);
                     int finalI = i;
                     int finalJ = j;
                     new Thread(new Runnable() {
                         @Override
                         public void run() {
                             try {
-                                datas.add(ac);
-                                Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyEntities.get(finalJ).getIp(), proxyEntities.get(finalJ).getPort()));
-                                Map<String, String> cookies = initCookies(ac.getPhone(), ac.getPassword(), new HashMap<String, String>(), proxy);
+                                Proxy proxy = new Proxy(Type.HTTP, new InetSocketAddress(proxyEntities.get(finalJ).getIp(), proxyEntities.get(finalJ).getPort()));
+                                System.err.println(proxy);
+                                Map<String, String> cookies = initCookies(ac, ac.getPhone(), ac.getPassword(), new HashMap<String, String>(), proxy);
                                 if(MapUtils.isNotEmpty(cookies)) {
-                                    if(initVc(cookies, proxy, ac)) {
+                                    Thread.sleep(7000);
+                                    if(initVc(cookies, proxy, ac, 0)) {
                                         if(initRealName(cookies, proxy, ac)) {
                                             initDefaultAddress(cookies, proxy, ac);
                                         }
@@ -87,20 +255,20 @@ public class OrderController2 {
             }
         }
 
-        List<Proxy> proxy = PandaProxyUtil.getProxy();
         List<ProxyEntity> proxyEntities = new ProxyUtil("f0c35c13b2fffac65e411939bc2de921").get50WdProxy();
         for (int j = 0; j < temp.size(); j++) {
             OrderAccount ac = temp.get(j);
+            datas.add(ac);
             int finalJ = j;
             new Thread(new Runnable() {
                 @Override
                 public void run() {
                     try {
-                        datas.add(ac);
-                        Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyEntities.get(finalJ).getIp(), proxyEntities.get(finalJ).getPort()));
-                        Map<String, String> cookies = initCookies(ac.getPhone(), ac.getPassword(), new HashMap<String, String>(), proxy);
+                        Proxy proxy = new Proxy(Type.HTTP, new InetSocketAddress(proxyEntities.get(finalJ).getIp(), proxyEntities.get(finalJ).getPort()));
+                        System.out.println("proxy>>> " + proxy);
+                        Map<String, String> cookies = initCookies(ac, ac.getPhone(), ac.getPassword(), new HashMap<String, String>(), proxy);
                         if(MapUtils.isNotEmpty(cookies)) {
-                            if(initVc(cookies, proxy, ac)) {
+                            if(initVc(cookies, proxy, ac, 1)) {
                                 if(initRealName(cookies, proxy, ac)) {
                                     initDefaultAddress(cookies, proxy, ac);
                                 }
@@ -129,7 +297,7 @@ public class OrderController2 {
 
     private boolean initDefaultAddress(Map<String, String> cookies, Proxy proxy, OrderAccount ac) {
         try {
-            Thread.sleep(3000);
+            Thread.sleep(7000);
             Document document = Jsoup.connect("https://mall.phicomm.com/my-receiver.html").method(Connection.Method.GET).cookies(cookies).timeout(SystemConstant.TIME_OUT)
                     .proxy(proxy).validateTLSCertificates(false)
                     .userAgent(UserAgentUtil.get())
@@ -151,6 +319,7 @@ public class OrderController2 {
 
     private boolean initRealName(Map<String, String> cookies, Proxy proxy, OrderAccount ac) {
         try {
+            Thread.sleep(7000);
             Document parse = Jsoup.connect("https://mall.phicomm.com/my-setting.html")
                     .cookies(cookies)
                     .userAgent(UserAgentUtil.get())
@@ -169,9 +338,9 @@ public class OrderController2 {
         }
     }
 
-    private boolean initVc(Map<String, String> cookies, Proxy proxy, OrderAccount ac) {
+    private boolean initVc(Map<String, String> cookies, Proxy proxy, OrderAccount ac, int i) {
         try {
-            Thread.sleep(5000);
+            Thread.sleep(7000);
             Document parse = Jsoup.connect("https://mall.phicomm.com/my-vclist.html")
                     .cookies(cookies)
                     .userAgent(UserAgentUtil.get())
@@ -182,6 +351,10 @@ public class OrderController2 {
             ac.setVc2(parse.body().text().split("冻结维C ")[1].split(" ")[0]);
             return true;
         } catch (Exception e) {
+            i++;
+            if(i < 3) {
+                initVc(cookies, proxy, ac, i);
+            }
             log.info("获取vc信息失败: " + e.getMessage());
             return false;
         }
@@ -192,7 +365,7 @@ public class OrderController2 {
         return new ProxyUtil("f0c35c13b2fffac65e411939bc2de921").getProxy();
     }
 
-    public Map<String, String> initCookies(String phone, String password, Map<String, String> cookies, Proxy proxy) {
+    public Map<String, String> initCookies(OrderAccount ac, String phone, String password, Map<String, String> cookies, Proxy proxy) {
         try {
             Connection.Response response = Jsoup.connect("https://mall.phicomm.com/passport-login.html")
                     .header("Host", "mall.phicomm.com")
@@ -208,14 +381,14 @@ public class OrderController2 {
 
             cookies = response.cookies();
             String body = response.body();
-            checkStatus(response);
             if (response.statusCode() == 403) {
-                proxy = new ProxyUtil("f0c35c13b2fffac65e411939bc2de921").getWdProxy();
+                proxy = getNewProxy();
+                return initCookies(ac, phone, password, cookies, proxy);
             } else {
                 cookies.put("__jsl_clearance", getck(body).split("=")[1]);
                 cookies = cookies;
+                return toLoginPage(ac, phone, password, cookies, proxy);
             }
-            return toLoginPage(phone, password, cookies, proxy);
         } catch (Exception e) {
             log.error("初始化登录失败: " + e.getMessage());
             if (e.getMessage().contains("HTTP error fetching URL") || e.getMessage().contains("Read timed out")
@@ -223,9 +396,9 @@ public class OrderController2 {
                     || e.getMessage().contains("Connection timed out")
                     || e.getMessage().contains("403")
                     ) {
+                proxy = initProxy();
             }
-            proxy = initProxy();
-            return initCookies(phone, password, cookies, proxy);
+            return initCookies(ac, phone, password, cookies, proxy);
         }
     }
 
@@ -240,6 +413,15 @@ public class OrderController2 {
         return true;
     }
 
+    public synchronized Proxy getNewProxy() {
+        try {
+            Thread.sleep(5200);
+            return new ProxyUtil("f0c35c13b2fffac65e411939bc2de921").getWdProxy();
+        } catch (Exception e) {
+            log.error("获取代理失败" + e.getMessage());
+            return null;
+        }
+    }
 
     public static String getck(String s) throws Exception {
         StringBuilder sb = new StringBuilder()
@@ -282,10 +464,11 @@ public class OrderController2 {
         return s1;
     }
 
-    public Map<String, String> toLoginPage(String phone, String password, Map<String, String> cookies, Proxy proxy) {
+    public Map<String, String> toLoginPage(OrderAccount ac, String phone, String password, Map<String, String> cookies, Proxy proxy) {
         try {
+            Thread.sleep(7000);
             Connection.Response execute = Jsoup.connect("https://mall.phicomm.com/passport-login.html")
-                    .timeout(100000)
+                    .timeout(45 * 1000)
                     .header("Host", "mall.phicomm.com")
                     .header("User-Agent", "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:63.0) Gecko/20100101 Firefox/63.0")
                     .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
@@ -299,13 +482,13 @@ public class OrderController2 {
             if (execute.statusCode() != 200) {
                 log.error("登录界面ck返回异常， code: [{}]", execute.statusCode());
                 if (execute.statusCode() == 403 || execute.statusCode() == 521) {
-                    return initCookies(phone, password, cookies, new ProxyUtil("f0c35c13b2fffac65e411939bc2de921").getWdProxy());
+                    return initCookies(ac, phone, password, cookies, getNewProxy());
                 } else {
-                    return toLoginPage(phone, password, cookies, proxy);
+                    return toLoginPage(ac, phone, password, cookies, proxy);
                 }
             } else {
                 cookies.putAll(execute.cookies());
-                return doLogin(phone, password, cookies, proxy, 0);
+                return doLogin(ac, phone, password, cookies, proxy, 0);
             }
         } catch (Exception e) {
             log.error("获取 登录界面 ck 失败，{}", e.getMessage());
@@ -313,7 +496,7 @@ public class OrderController2 {
         return null;
     }
 
-    public Map<String, String> doLogin(String phone, String password, Map<String, String> cookies, Proxy proxy, int tryCount) {
+    public Map<String, String> doLogin(OrderAccount orderAccount, String phone, String password, Map<String, String> cookies, Proxy proxy, int tryCount) {
         try {
             Connection.Response loginResponse = Jsoup.connect("https://mall.phicomm.com/passport-post_login.html")
                     .method(Connection.Method.POST)
@@ -338,6 +521,11 @@ public class OrderController2 {
             log.info(JSON.parseObject(loginResponse.body()).toString());
             if (JSON.parseObject(loginResponse.body()).toString().contains("错误") || loginResponse.body().contains("error")) {
 //                this.remark = this.remark + "--密码错误";
+                if(JSON.parseObject(loginResponse.body()).toString().contains("错误")) {
+                    orderAccount.setRemark((orderAccount.getRemark() + "--" + "密码错误"));
+                } else {
+                    orderAccount.setRemark((orderAccount.getRemark() + "--" + "登录失败"));
+                }
                 return null;
             }
             cookies.putAll(loginResponse.cookies());
@@ -353,7 +541,7 @@ public class OrderController2 {
             if (tryCount < 50) {
                 tryCount = tryCount + 1;
                 info(phone, password, "第" + tryCount + "次登录重试");
-                return doLogin(phone, password, cookies, proxy, tryCount);
+                return doLogin(orderAccount, phone, password, cookies, proxy, tryCount);
             } else {
                 info(phone, password, "超过最大登录次数");
                 return null;

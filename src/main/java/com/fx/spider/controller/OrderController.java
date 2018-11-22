@@ -3,7 +3,6 @@ package com.fx.spider.controller;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.fx.spider.AccountUtil;
 import com.fx.spider.constant.SystemConstant;
 import com.fx.spider.model.OrderAccount;
 import com.fx.spider.model.Page;
@@ -11,7 +10,6 @@ import com.fx.spider.model.ProxyEntity;
 import com.fx.spider.model.ViewData;
 import com.fx.spider.service.AccountService;
 import com.fx.spider.util.CookieUtils;
-import com.fx.spider.util.PandaProxyUtil;
 import com.fx.spider.util.ProxyUtil;
 import com.fx.spider.util.UserAgentUtil;
 
@@ -183,9 +181,9 @@ public class OrderController {
         List<OrderAccount> orderAccountList = accountService.findPage(page);
         System.out.println("===============");
         System.out.println(orderAccountList.size());
-        for (int i = 0; i < 350; i++) {
+/*        for (int i = 0; i < 350; i++) {
             orderAccountList.remove(0);
-        }
+        }*/
         System.out.println(orderAccountList.size());
         System.out.println("===============");
 
